@@ -1,0 +1,5 @@
+examples/
+*.h5
+.ipynb_checkpoints/
+cronus/__pycache__/
+cronus.egg-info/
