@@ -33,7 +33,7 @@ class sampler:
 
             diag = diagnose(tau_epsilon=0.05, tau_multiple=10)
 
-            start = p0#[cm.get_rank]
+            start = p0
 
             #start0 = np.array([ 1.43563590e+00, -2.79228917e-02,  1.01513786e+01, -2.94868355e+02,
             #                    2.45089136e+03, -3.57808097e+03,  1.85639553e-01, -2.42260305e-01,

@@ -1,6 +1,6 @@
 import numpy as np
 from zeus import ChainManager
-import sys
+from scipy.optimize import minimize
 
 class initialize_walkers:
 
@@ -21,6 +21,9 @@ class initialize_walkers:
         logps = np.array(list(map(logpost_fn, init_samples)))
         max_idx = np.argmax(logps)
         self.centre = init_samples[max_idx]
+
+        result = minimize(self.logpost_fn, self.centre, options={'maxiter':20000},  method='Nelder-Mead')
+        self.centre = result["x"]
 
     
     def sample_prior(self, ninit=100):
