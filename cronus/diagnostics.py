@@ -60,4 +60,4 @@ def test_gelmanrubin(means, vars, N):
     # Return R_hat statistic
     R_hat = np.sqrt(Var_hat / W)
     
-    return R_hat**2
+    return R_hat

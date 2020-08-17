@@ -13,6 +13,8 @@ from .start import initialize_walkers
 
 import numpy as np
 
+import sys
+
 def run_script():
 
     # Read parameter file as an argument
@@ -38,7 +40,8 @@ def run_script():
     logpost_fn = define_logposterior(params, loglike_fn, logprior_fn).get_logposterior
 
     # Initialize walkers
-    p0 = initialize_walkers(params).get_walkers()
+    ensemble = initialize_walkers(params, logpost_fn)
+    p0 = ensemble.get_walkers()
 
     # Run MCMC
     sampler(params).run_mcmc(logpost_fn, p0)
