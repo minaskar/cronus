@@ -28,7 +28,7 @@ class diagnose:
         converged = np.all(tau * self.tau_multiple < self.nsamples)
         delta = np.abs(old_tau - tau) / tau
         converged &= np.all(delta < self.tau_epsilon)
-        return converged, round(tau,2), round(delta,4)
+        return converged, round(tau,1), round(delta,3)
 
     
     def get_gr_details(self):
