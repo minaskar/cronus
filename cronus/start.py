@@ -1,6 +1,5 @@
 import numpy as np
 from zeus import ChainManager
-from scipy.optimize import minimize
 
 class initialize_walkers:
 
@@ -22,8 +21,12 @@ class initialize_walkers:
         max_idx = np.argmax(logps)
         self.centre = init_samples[max_idx]
 
-        result = minimize(self.logpost_fn, self.centre, options={'maxiter':20000},  method='Nelder-Mead')
-        self.centre = result["x"]
+        self.centre = np.array([ 1.43563590e+00, -2.79228917e-02,  1.01513786e+01, -2.94868355e+02,
+                                 2.45089136e+03, -3.57808097e+03,  1.85639553e-01, -2.42260305e-01,
+                                -1.16837933e+03,  1.30581940e+03,  6.21201014e+01,  9.17828705e-01,
+                                -7.10687852e+01,  7.39951459e+02, -4.96254867e+03,  1.11538809e+04,
+                                 8.99609731e-01, 4.79761397e-01, 7.86391667e+00, 1.50709982e+00,
+                                 1.06320700e+00,  1.00022316e+00])
 
     
     def sample_prior(self, ninit=100):
