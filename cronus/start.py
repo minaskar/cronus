@@ -48,16 +48,15 @@ class initialize_walkers:
 
     def _get_walkers(self):
         
-        for chain in range(self.nchains):
-            for walker in range(self.nwalkers):
-                for i, p in enumerate(self.parameters):
-                    if self.parameters[p]['prior']['type'] == 'uniform':
-                        self.start[chain, walker, i] = np.random.uniform(self.parameters[p]['prior']['min'],
-                                                                         self.parameters[p]['prior']['max'])
+        for walker in range(self.nwalkers):
+            for i, p in enumerate(self.parameters):
+                if self.parameters[p]['prior']['type'] == 'uniform':
+                    self.start[walker, i] = np.random.uniform(self.parameters[p]['prior']['min'],
+                                                                     self.parameters[p]['prior']['max'])
                         
-                    elif self.parameters[p]['prior']['type'] == 'normal':
-                        self.start[chain, walker, i] = np.random.normal(self.parameters[p]['prior']['loc'],
-                                                                        self.parameters[p]['prior']['scale'])
+                elif self.parameters[p]['prior']['type'] == 'normal':
+                    self.start[walker, i] = np.random.normal(self.parameters[p]['prior']['loc'],
+                                                                    self.parameters[p]['prior']['scale'])
 
         return self.start
 
