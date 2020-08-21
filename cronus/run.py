@@ -41,7 +41,7 @@ def run_script():
 
     # Initialize walkers
     ensemble = initialize_walkers(params, logpost_fn)
-    p0 = ensemble.get_walkers()
+    p0 = ensemble._get_walkers()
 
     # Run MCMC
     sampler(params).run_mcmc(logpost_fn, p0)
