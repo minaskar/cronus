@@ -64,6 +64,9 @@ def get_default(params):
     if 'nmax' not in params['Sampler']:
         params['Sampler']['nmax'] = np.inf
 
+    if 'ncall' not in params['Sampler']:
+        params['Sampler']['ncall'] = np.inf
+
     if 'initial' not in params['Sampler']:
         params['Sampler']['initial'] = 'ellipse'
     else:

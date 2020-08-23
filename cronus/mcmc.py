@@ -25,6 +25,7 @@ class sampler:
         self.nchains =  params['Sampler']['nchains']
         self.nmin = params['Sampler']['nmin']
         self.nmax = params['Sampler']['nmax']
+        self.ncall = params['Sampler']['ncall']
 
         self.use_act = params['Diagnostics']['Autocorrelation']['use']
         self.dact = params['Diagnostics']['Autocorrelation']['dact']
@@ -66,9 +67,7 @@ class sampler:
                 sampler.reset()
 
                 samples = d.load(self.output+'chain_'+str(cm.get_rank))
-                
-                
-                
+                    
                 
                 diag.add_samples(samples)
                 act_converged, tau, delta = diag.test_act()
@@ -95,17 +94,32 @@ class sampler:
 
                     rhat = test_gelmanrubin(means, vars, Ns[0])
                     clock = time.strftime("%H:%M:%S", time.gmtime(time.time() - t0))
-                    #clock = time.time() - t0
-                    print(clock, '| Iter:', cnt, '| ncall:', ncall, '| R-hat:', round(np.max(rhat),4), '| act:', np.max(taus), '| nact:', np.round(cnt/np.max(taus),0), '<', self.nact, '| dact:', np.max(deltas), '<', self.dact, end='\r', flush=True)
+                    print(clock, '| Iter:', cnt, '| ncall:', ncall, '| R-hat:', round(np.max(rhat),4),
+                          '| act:', np.max(taus), '| nact:', int(cnt/np.max(taus)), '<', self.nact,
+                          '| dact:', np.max(deltas), '<', self.dact, end='\r', flush=True)
 
-                    if np.all(np.abs(rhat-1.0)<self.epsilon) and np.all(act_converged) and cnt>self.nmin:
-                        print('', flush=True)
-                        print('Done', flush=True)
-                        terminate = True
+                    
+                    if cnt > self.nmin:
+                        if self.use_gr and self.use_act:
+                            if np.all(np.abs(rhat-1.0)<self.epsilon) and np.all(act_converged):
+                                print('', flush=True)
+                                terminate = True
+                        elif self.use_gr and not self.use_act:
+                            if np.all(np.abs(rhat-1.0)<self.epsilon):
+                                print('', flush=True)
+                                terminate = True
+                        elif not self.use_gr and self.use_act:
+                            if np.all(act_converged):
+                                print('', flush=True)
+                                terminate = True
+                    
 
                     if cnt>self.nmax:
                         print('', flush=True)
-                        print('Done', flush=True)
+                        terminate = True
+
+                    if ncall>self.ncall:
+                        print('', flush=True)
                         terminate = True
                     
                 terminate = cm.bcast(terminate, root=0)
