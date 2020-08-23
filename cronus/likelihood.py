@@ -4,7 +4,7 @@ import inspect
 
 
 def import_loglikelihood(params):
-    function = params['Likelihood']['module']
+    function = params['Likelihood']['function']
     path = params['Likelihood']['path']
 
     spec = importlib.util.spec_from_file_location(function, path)

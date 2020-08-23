@@ -10,6 +10,7 @@ from .prior import import_logprior
 from .posterior import define_logposterior
 from .mcmc import sampler
 from .start import initialize_walkers
+from .default import get_default
 
 import numpy as np
 
@@ -30,18 +31,14 @@ def run_script():
     yaml = YAML(typ='safe')
     params = yaml.load(path)
 
+    # Fix parameters
+    params = get_default(params)
+
     # Import loglikelihood from parameter file information
     loglike_fn = import_loglikelihood(params)
 
     # Import logprior from parameter file information
     logprior_fn = import_logprior(params).get_logprior
 
-    # Define logposterior
-    logpost_fn = define_logposterior(params, loglike_fn, logprior_fn).get_logposterior
-
-    # Initialize walkers
-    ensemble = initialize_walkers(params, logpost_fn)
-    p0 = ensemble._get_walkers()
-
     # Run MCMC
-    sampler(params).run_mcmc(logpost_fn, p0)
+    sampler(params).run_mcmc(loglike_fn, logprior_fn)

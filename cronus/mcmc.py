@@ -2,28 +2,44 @@ import numpy as np
 import zeus
 from zeus import ChainManager
 
-from scipy.optimize import minimize
 
 import sys
+import time
 
 import emcee
 
 from .save import datasaver
 from .diagnostics import diagnose, test_gelmanrubin
+from .posterior import define_logposterior
+from .start import initialize_walkers
 
 class sampler:
 
     def __init__(self, params):
-        sampler_info = params['Sampler']
-        self.name = sampler_info['name']
-        self.ndim =  sampler_info['ndim']
-        self.nwalkers =  sampler_info['nwalkers']
-        self.nsteps =  sampler_info['nsteps']
-        self.nchains =  sampler_info['nchains']
+        self.params = params
+        
+        self.name = params['Sampler']['name']
+        self.ndim =  params['Sampler']['ndim']
+        self.nwalkers =  params['Sampler']['nwalkers']
+        self.nsteps =  params['Sampler']['ncheck']
+        self.nchains =  params['Sampler']['nchains']
+        self.nmin = params['Sampler']['nmin']
+        self.nmax = params['Sampler']['nmax']
 
-    def run_mcmc(self, logpost_fn, p0):
+        self.use_act = params['Diagnostics']['Autocorrelation']['use']
+        self.dact = params['Diagnostics']['Autocorrelation']['dact']
+        self.nact = params['Diagnostics']['Autocorrelation']['nact']
+
+        self.use_gr = params['Diagnostics']['Gelman-Rubin']['use']
+        self.epsilon = params['Diagnostics']['Gelman-Rubin']['epsilon']
+
+        self.output = params['Output']
+
+    def run_mcmc(self, loglike_fn, logprior_fn):
 
         with ChainManager(self.nchains) as cm:
+
+            logpost_fn = define_logposterior(self.params, loglike_fn, logprior_fn).get_logposterior
 
             if self.name == 'zeus':
                 sampler = zeus.sampler(self.nwalkers, self.ndim, logpost_fn, pool=cm.get_pool, verbose=False)
@@ -31,32 +47,28 @@ class sampler:
                 sampler = emcee.EnsembleSampler(self.nwalkers, self.ndim, logpost_fn, pool=cm.get_pool)
             d = datasaver('chain_'+str(cm.get_rank)+'.h5')
 
-            diag = diagnose(tau_epsilon=0.05, tau_multiple=10)
+            diag = diagnose(tau_epsilon=self.dact, tau_multiple=self.nact)
 
-            start = p0
+            ensemble = initialize_walkers(self.params, loglike_fn, logprior_fn)
+            start = ensemble.get_walkers()
 
-            #start0 = np.array([ 1.43563590e+00, -2.79228917e-02,  1.01513786e+01, -2.94868355e+02,
-            #                    2.45089136e+03, -3.57808097e+03,  1.85639553e-01, -2.42260305e-01,
-            #                   -1.16837933e+03,  1.30581940e+03,  6.21201014e+01,  9.17828705e-01,
-            #                   -7.10687852e+01,  7.39951459e+02, -4.96254867e+03,  1.11538809e+04,
-            #                    8.99609731e-01, 4.79761397e-01, 7.86391667e+00, 1.50709982e+00,
-            #                    1.06320700e+00,  1.00022316e+00])
-            #np.random.seed(cm.get_rank)
-            #start = 0.01*np.random.randn(self.nwalkers, self.ndim) + start0
-
+            if cm.get_rank==0:
+                t0 = time.time()
+            
+            ncall = 0
             cnt = 0
-
             while True:
                 sampler.run_mcmc(start, self.nsteps, progress=False);
                 chain = sampler.get_chain()
                 start = chain[-1]
                 
-                d.save('chain_'+str(cm.get_rank), chain)
+                d.save(self.output+'chain_'+str(cm.get_rank), chain)
                 sampler.reset()
 
-                samples = d.load('chain_'+str(cm.get_rank))
+                samples = d.load(self.output+'chain_'+str(cm.get_rank))
                 
-                cnt += self.nsteps
+                
+                
                 
                 diag.add_samples(samples)
                 act_converged, tau, delta = diag.test_act()
@@ -74,16 +86,26 @@ class sampler:
 
                 terminate = False
                 if cm.get_rank == 0:
-                    rhat = test_gelmanrubin(means, vars, Ns[0])
-                
-                    print('Iter:', cnt, '| Max R-hat:', round(np.max(rhat),4), '| ACT:', taus, 'Dtau:', deltas, end='\r')
-                    sys.stdout.flush()
 
-                    if np.all(np.abs(rhat-1.0)<0.015) and np.all(act_converged):
-                        print('')
-                        sys.stdout.flush()
-                        print('Done')
-                        sys.stdout.flush()
+                    cnt += self.nsteps
+                    if self.name == 'zeus':
+                        ncall += sampler.ncall
+                    elif self.name == 'emcee':
+                        ncall += self.nsteps * self.nwalkers
+
+                    rhat = test_gelmanrubin(means, vars, Ns[0])
+                    clock = time.strftime("%H:%M:%S", time.gmtime(time.time() - t0))
+                    #clock = time.time() - t0
+                    print(clock, '| Iter:', cnt, '| ncall:', ncall, '| R-hat:', round(np.max(rhat),4), '| act:', np.max(taus), '| nact:', np.round(cnt/np.max(taus),0), '<', self.nact, '| dact:', np.max(deltas), '<', self.dact, end='\r', flush=True)
+
+                    if np.all(np.abs(rhat-1.0)<self.epsilon) and np.all(act_converged) and cnt>self.nmin:
+                        print('', flush=True)
+                        print('Done', flush=True)
+                        terminate = True
+
+                    if cnt>self.nmax:
+                        print('', flush=True)
+                        print('Done', flush=True)
                         terminate = True
                     
                 terminate = cm.bcast(terminate, root=0)
