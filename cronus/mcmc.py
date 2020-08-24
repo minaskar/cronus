@@ -12,6 +12,7 @@ from .save import datasaver
 from .diagnostics import diagnose, test_gelmanrubin
 from .posterior import define_logposterior
 from .start import initialize_walkers
+from .optimize import find_MAP
 
 class sampler:
 
@@ -53,7 +54,12 @@ class sampler:
             diag = diagnose(tau_epsilon=self.dact, tau_multiple=self.nact)
 
             ensemble = initialize_walkers(self.params, loglike_fn, logprior_fn)
-            start = ensemble.get_walkers()
+            x0, f0, h0 = find_MAP(self.params, ensemble.loglike_fn, ensemble.logprior_fn, ensemble.bounds)
+            x0s = cm.allgather(x0)
+            f0s = cm.allgather(f0)
+            h0s = cm.allgather(h0)
+            #print(x0s, f0s, flush=True)
+            start = ensemble.get_walkers(x0s[np.argmin(f0s)], h0s[np.argmin(f0s)])
 
             if rank==0:
                 t0 = time.time()
@@ -61,7 +67,7 @@ class sampler:
             ncall = 0
             cnt = 0
             while True:
-                sampler.run_mcmc(start, self.nsteps, progress=True);
+                sampler.run_mcmc(start, self.nsteps, progress=False);
                 chain = sampler.get_chain()
                 start = chain[-1]
                 
@@ -85,8 +91,9 @@ class sampler:
                 Ns = cm.gather(N, root=0)
 
 
-                terminate = False
+                
                 if rank == 0:
+                    terminate = False
 
                     cnt += self.nsteps
                     if self.name == 'zeus':
@@ -127,6 +134,8 @@ class sampler:
                 else:
                     terminate = False
                     
+                cm.chains_comm.barrier()
                 terminate = cm.bcast(terminate, root=0)
+                cm.chains_comm.barrier()
                 if terminate:
                     break

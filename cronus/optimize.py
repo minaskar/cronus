@@ -2,7 +2,7 @@ import numpy as np
 from iminuit import minimize
 from .posterior import define_logposterior
 
-def find_MAP(params, loglike_fn, logprior_fn, bounds, ntemp=20, return_hess_inv=False):
+def find_MAP(params, loglike_fn, logprior_fn, bounds, ntemp=20):
 
     x0 = np.empty(len(bounds))
     for i in range(len(bounds)):
@@ -26,7 +26,5 @@ def find_MAP(params, loglike_fn, logprior_fn, bounds, ntemp=20, return_hess_inv=
             if result.message == 'Optimization terminated successfully.' or cnt > 20000:
                 break
 
-    if return_hess_inv:
-        return result.x, result.hess_inv 
-    else:
-        return result.x
+    return result.x, result.fun, result.hess_inv 
+    
