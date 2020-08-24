@@ -91,11 +91,9 @@ class initialize_walkers:
     def get_walkers(self, x0, hess_inv=None):
 
         if self.sampler_info['initial'] == 'ellipse':
-            x0, f0, hess_inv0 = find_MAP(self.params, self.loglike_fn, self.logprior_fn, self.bounds)
             p0 = self.get_ellipse(x0)
         elif self.sampler_info['initial'] == 'laplace':
-            x0, f0, hess_inv0 = find_MAP(self.params, self.loglike_fn, self.logprior_fn, self.bounds)
-            p0 = self.get_laplace(x0, hess_inv0)
+            p0 = self.get_laplace(x0, hess_inv)
         elif self.sampler_info['initial'] == 'prior':
             p0 = self.get_prior()
         else:
