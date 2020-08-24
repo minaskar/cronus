@@ -40,6 +40,8 @@ class sampler:
 
         with ChainManager(self.nchains) as cm:
 
+            rank = cm.get_rank
+
             logpost_fn = define_logposterior(self.params, loglike_fn, logprior_fn).get_logposterior
 
             if self.name == 'zeus':
@@ -53,20 +55,20 @@ class sampler:
             ensemble = initialize_walkers(self.params, loglike_fn, logprior_fn)
             start = ensemble.get_walkers()
 
-            if cm.get_rank==0:
+            if rank==0:
                 t0 = time.time()
             
             ncall = 0
             cnt = 0
             while True:
-                sampler.run_mcmc(start, self.nsteps, progress=False);
+                sampler.run_mcmc(start, self.nsteps, progress=True);
                 chain = sampler.get_chain()
                 start = chain[-1]
                 
-                d.save(self.output+'chain_'+str(cm.get_rank), chain)
+                d.save(self.output+'chain_'+str(rank), chain)
                 sampler.reset()
 
-                samples = d.load(self.output+'chain_'+str(cm.get_rank))
+                samples = d.load(self.output+'chain_'+str(rank))
                     
                 
                 diag.add_samples(samples)
@@ -84,7 +86,7 @@ class sampler:
 
 
                 terminate = False
-                if cm.get_rank == 0:
+                if rank == 0:
 
                     cnt += self.nsteps
                     if self.name == 'zeus':
@@ -121,6 +123,9 @@ class sampler:
                     if ncall>self.ncall:
                         print('', flush=True)
                         terminate = True
+
+                else:
+                    terminate = False
                     
                 terminate = cm.bcast(terminate, root=0)
                 if terminate:
