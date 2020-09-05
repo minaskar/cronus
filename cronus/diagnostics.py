@@ -1,6 +1,6 @@
 import numpy as np
 
-from zeus import GelmanRubin, Geweke, AutoCorrTime
+from zeus import GelmanRubin, AutoCorrTime
 
 
 
@@ -26,7 +26,6 @@ class diagnose:
         self.taus.append(tau)
 
         converged = np.all(tau * self.tau_multiple < self.nsamples)
-        #delta = np.abs(old_tau - tau) / tau
         delta = np.abs(tau-old_tau) / tau
         converged &= np.all(delta < self.tau_epsilon)
         return converged, round(tau,1), round(delta,3)

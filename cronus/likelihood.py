@@ -11,9 +11,6 @@ def import_loglikelihood(params):
     logprob = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = logprob
     spec.loader.exec_module(logprob)
-
     list_of_functions = inspect.getmembers(logprob, inspect.isfunction)
-
-    for i in range(len(list_of_functions)):
-        if list_of_functions[i][0] == function:
-            return list_of_functions[i][1]
+    
+    return dict(list_of_functions)[function]

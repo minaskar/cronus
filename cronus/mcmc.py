@@ -10,7 +10,9 @@ import emcee
 
 from .save import datasaver
 from .diagnostics import diagnose, test_gelmanrubin
-from .posterior import define_logposterior
+
+from .bayes import Distribution
+from .likelihood import import_loglikelihood
 from .start import initialize_walkers
 from .optimize import find_MAP
 
@@ -19,6 +21,7 @@ class sampler:
     def __init__(self, params):
         self.params = params
         
+        # Sampler
         self.name = params['Sampler']['name']
         self.ndim =  params['Sampler']['ndim']
         self.nwalkers =  params['Sampler']['nwalkers']
@@ -28,6 +31,7 @@ class sampler:
         self.nmax = params['Sampler']['nmax']
         self.ncall = params['Sampler']['ncall']
 
+        # Diagnostics
         self.use_act = params['Diagnostics']['Autocorrelation']['use']
         self.dact = params['Diagnostics']['Autocorrelation']['dact']
         self.nact = params['Diagnostics']['Autocorrelation']['nact']
@@ -35,32 +39,41 @@ class sampler:
         self.use_gr = params['Diagnostics']['Gelman-Rubin']['use']
         self.epsilon = params['Diagnostics']['Gelman-Rubin']['epsilon']
 
+        # Output
         self.output = params['Output']
 
-    def run_mcmc(self, loglike_fn, logprior_fn):
+
+    def run_mcmc(self, loglike_fn):
 
         with ChainManager(self.nchains) as cm:
 
             rank = cm.get_rank
 
-            logpost_fn = define_logposterior(self.params, loglike_fn, logprior_fn).get_logposterior
-
+            # Define Log Posterior
+            distribution = Distribution(self.params, loglike_fn)
+            logpost_fn = distribution.get_logposterior
+            
+            # Initialize Sampler
             if self.name == 'zeus':
-                sampler = zeus.sampler(self.nwalkers, self.ndim, logpost_fn, pool=cm.get_pool, verbose=False)
+                sampler = zeus.sampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool, verbose=False)
             elif self.name == 'emcee':
-                sampler = emcee.EnsembleSampler(self.nwalkers, self.ndim, logpost_fn, pool=cm.get_pool)
-            d = datasaver('chain_'+str(cm.get_rank)+'.h5')
+                sampler = emcee.EnsembleSampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool)
 
+            # Initialize Datasaver
+            d = datasaver(self.output+'chain_'+str(cm.get_rank)+'.h5')
+
+            # Initialize Diagnostics
             diag = diagnose(tau_epsilon=self.dact, tau_multiple=self.nact)
 
-            ensemble = initialize_walkers(self.params, loglike_fn, logprior_fn)
-            x0, f0, h0 = find_MAP(self.params, ensemble.loglike_fn, ensemble.logprior_fn, ensemble.bounds)
+            # Initialize Walkers
+            ensemble = initialize_walkers(self.params, distribution)
+            x0, f0, h0 = find_MAP(self.params, distribution, ensemble.bounds)
             x0s = cm.allgather(x0)
             f0s = cm.allgather(f0)
             h0s = cm.allgather(h0)
-            #print(x0s, f0s, flush=True)
             start = ensemble.get_walkers(x0s[np.argmin(f0s)], h0s[np.argmin(f0s)])
 
+            # Start Sampling Loop
             if rank==0:
                 t0 = time.time()
             
@@ -71,11 +84,10 @@ class sampler:
                 chain = sampler.get_chain()
                 start = chain[-1]
                 
-                d.save(self.output+'chain_'+str(rank), chain)
+                d.save('chain_'+str(rank), chain)
                 sampler.reset()
 
-                samples = d.load(self.output+'chain_'+str(rank))
-                    
+                samples = d.load('chain_'+str(rank))
                 
                 diag.add_samples(samples)
                 act_converged, tau, delta = diag.test_act()

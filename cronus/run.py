@@ -5,12 +5,9 @@ import argparse
 from ruamel.yaml import YAML
 from pathlib import Path
 
-from .likelihood import import_loglikelihood
-from .prior import import_logprior
-from .posterior import define_logposterior
 from .mcmc import sampler
-from .start import initialize_walkers
 from .default import get_default
+from .likelihood import import_loglikelihood
 
 import numpy as np
 
@@ -34,11 +31,14 @@ def run_script():
     # Fix parameters
     params = get_default(params)
 
-    # Import loglikelihood from parameter file information
+    # Create Output folder
+    try:
+        os.makedirs(params['Output'])
+    except:
+        pass
+
+    # Import Log Likelihood function from file
     loglike_fn = import_loglikelihood(params)
 
-    # Import logprior from parameter file information
-    logprior_fn = import_logprior(params).get_logprior
-
     # Run MCMC
-    sampler(params).run_mcmc(loglike_fn, logprior_fn)
+    sampler(params).run_mcmc(loglike_fn)

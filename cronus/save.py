@@ -7,19 +7,20 @@ class datasaver:
         self.filename = filename
         self.initialised = False
 
-    def save(self, name, data):
 
-        nsamples, nwalkers, ndim = np.shape(data)
+    def save(self, name, data):
 
         if not self.initialised:
             with h5py.File(self.filename, 'w') as hf:
-                hf.create_dataset(name, data=data, compression="gzip", chunks=True, maxshape=(None, nwalkers, ndim)) 
+                hf.create_dataset(name, data=data, compression="gzip", chunks=True, maxshape=(None, )+data.shape[1:]) 
             self.initialised  = True
         else:
+            nsamples = data.shape[0]
             with h5py.File(self.filename, 'a') as hf:
                 hf[name].resize((hf[name].shape[0] + nsamples), axis = 0)
                 hf[name][-nsamples:] = data
         
+
     def load(self, name):
 
         with h5py.File(self.filename, "r") as hf:
