@@ -7,8 +7,8 @@ with open("requirements.txt", 'r') as dependencies:
     requirements = [pkg.strip() for pkg in dependencies]
 
 setuptools.setup(
-    name="cronus",
-    version="1.0.0",
+    name="cronus-mcmc",
+    version="1.0.1",
     author="Minas Karamanis",
     author_email="minaskar@gmail.com",
     description="cronus: MCMC + MPI MADE EASY",
