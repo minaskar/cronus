@@ -5,9 +5,11 @@ Installation
 Requirements
 ============
 
-``cronus`` is compatible with Python 3.6+. It requires ``numpy``, ``scipy`` and ``zeus`` to run.
+``cronus`` is compatible with Python 3.6+. It requires ``numpy``, ``scipy``, ``mpi4py``, ``ìminuit``, ``h5py`` and ``zeus`` to run.
 If you want to use ``cronus`` with either ``emcee`` or ``dynesty`` please make sure that you have
 those installed too.
+
+You can find information about how to install ``mpi4py`` and its prerequisites at  https://mpi4py.readthedocs.io/en/stable/install.html
 
 Install using pip
 =================
