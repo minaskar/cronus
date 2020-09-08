@@ -12,7 +12,7 @@ Astrophysical and Cosmological applications.
 
 ## Documentation
 
-Read the docs at [zeus-mcmc.readthedocs.io](https://zeus-mcmc.readthedocs.io)
+Read the docs at [cronus-mcmc.readthedocs.io](https://cronus-mcmc.readthedocs.io)
 
 ## Attribution
 
