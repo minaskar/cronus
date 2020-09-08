@@ -71,7 +71,7 @@ Parameter File
 
 The next step is to create the  parameter file that we will call ``file.yaml``:
 
-.. code:: yaml
+.. code-block:: yaml
 
     Likelihood:
       path: logprob.py
