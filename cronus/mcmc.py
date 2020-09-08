@@ -1,12 +1,8 @@
 import numpy as np
-import zeus
 from zeus import ChainManager
-
 
 import sys
 import time
-
-import emcee
 
 from .save import datasaver
 from .diagnostics import diagnose, test_gelmanrubin
@@ -27,9 +23,10 @@ class sampler:
         self.nwalkers =  params['Sampler']['nwalkers']
         self.nsteps =  params['Sampler']['ncheck']
         self.nchains =  params['Sampler']['nchains']
-        self.nmin = params['Sampler']['nmin']
-        self.nmax = params['Sampler']['nmax']
-        self.ncall = params['Sampler']['ncall']
+        self.miniter = params['Sampler']['miniter']
+        self.maxiter = params['Sampler']['maxiter']
+        self.maxcall = params['Sampler']['maxcall']
+        self.thin = params['Sampler']['thin']
 
         # Diagnostics
         self.use_act = params['Diagnostics']['Autocorrelation']['use']
@@ -42,8 +39,20 @@ class sampler:
         # Output
         self.output = params['Output']
 
+    
+    def run(self, loglike_fn):
+        if self.name in ['zeus', 'emcee']:
+            self.run_mcmc(loglike_fn)
+        elif self.name  in ['dynesty']:
+            self.run_nested(loglike_fn)
+
 
     def run_mcmc(self, loglike_fn):
+
+        if self.name == 'zeus':
+            import zeus
+        elif self.name == 'emcee':
+            import emcee
 
         with ChainManager(self.nchains) as cm:
 
@@ -63,7 +72,7 @@ class sampler:
             d = datasaver(self.output+'chain_'+str(cm.get_rank)+'.h5')
 
             # Initialize Diagnostics
-            diag = diagnose(tau_epsilon=self.dact, tau_multiple=self.nact)
+            diag = diagnose(tau_epsilon=self.dact, tau_multiple=self.nact, thin=self.thin)
 
             # Initialize Walkers
             ensemble = initialize_walkers(self.params, distribution)
@@ -80,19 +89,17 @@ class sampler:
             ncall = 0
             cnt = 0
             while True:
-                sampler.run_mcmc(start, self.nsteps, progress=False);
+                sampler.run_mcmc(start, self.nsteps, progress=False, thin=self.thin);
                 chain = sampler.get_chain()
+                logps = sampler.get_log_prob()
                 start = chain[-1]
-                
-                d.save('chain_'+str(rank), chain)
+                d.save(chain, logps)
                 sampler.reset()
 
-                samples = d.load('chain_'+str(rank))
-                
+                samples = d.load('samples')
                 diag.add_samples(samples)
                 act_converged, tau, delta = diag.test_act()
                 mean, var, N = diag.get_gr_details()
-
                 cm.chains_comm.barrier()
 
                 act_converged = cm.gather(act_converged, root=0)
@@ -101,8 +108,6 @@ class sampler:
                 means = cm.gather(mean, root=0)
                 vars = cm.gather(var, root=0)
                 Ns = cm.gather(N, root=0)
-
-
                 
                 if rank == 0:
                     terminate = False
@@ -120,7 +125,7 @@ class sampler:
                           '| dact:', np.max(deltas), '<', self.dact, end='\r', flush=True)
 
                     
-                    if cnt > self.nmin:
+                    if cnt > self.miniter:
                         if self.use_gr and self.use_act:
                             if np.all(np.abs(rhat-1.0)<self.epsilon) and np.all(act_converged):
                                 print('', flush=True)
@@ -135,11 +140,11 @@ class sampler:
                                 terminate = True
                     
 
-                    if cnt>self.nmax:
+                    if cnt>self.maxiter:
                         print('', flush=True)
                         terminate = True
 
-                    if ncall>self.ncall:
+                    if ncall>self.maxcall:
                         print('', flush=True)
                         terminate = True
 
@@ -151,3 +156,20 @@ class sampler:
                 cm.chains_comm.barrier()
                 if terminate:
                     break
+
+        
+    def run_nested(self, loglike_fn):
+
+        import dynesty
+
+        with ChainManager(1) as cm:
+
+            # Define Log Posterior
+            distribution = Distribution(self.params, loglike_fn)
+            loglike_fn = distribution.get_loglikelihood
+            ptform = distribution.get_prior_transform
+
+            sampler = dynesty.DynamicNestedSampler(loglike_fn, ptform, distribution.nfree, pool=cm.get_pool, use_pool={'prior_transform': False})
+            sampler.run_nested(wt_kwargs={'pfrac': 1.0})
+
+            res = sampler.results

@@ -1,9 +1,8 @@
-import numpy as np 
+import numpy as np
+from scipy.stats import norm
 import importlib.util
 import sys
 import inspect
-
-from .likelihood import import_loglikelihood
 
 
 def todict(keys, elements):
@@ -19,7 +18,7 @@ class Distribution:
         self.labels = [key for key in params['Parameters']]
         self.ndim =  params['Sampler']['ndim']
 
-        self.dictionary = True
+        self.dictionary = params['Likelihood']['dictionary']
         self.fixed_mask, self.fixed_values, self.nfixed = self._get_fixed_parameters()
         self.free_mask = self.fixed_mask == False
         self.nfree = self.ndim - self.nfixed
@@ -74,11 +73,11 @@ class Distribution:
         lp = self.get_logprior(x)
         if not np.isfinite(lp):
             return -np.inf
-        x = self._free_to_full(x)
         return lp + self.get_loglikelihood(x) * self.beta
 
     
     def get_loglikelihood(self, x):
+        x = self._free_to_full(x)
         if self.dictionary:
             x = todict(self.labels, x)
         return self.loglike_fn(x)
@@ -90,3 +89,20 @@ class Distribution:
     
     def set_beta(self, beta=1.0):
         self.beta = beta
+
+
+    def get_prior_transform(self, u):
+
+        ptform = np.empty_like(u)
+        t = norm.ppf(u)
+
+        for i, p in enumerate(self.free_labels):
+            if self.parameters[p]['prior']['type'] == 'uniform':
+                low = self.parameters[p]['prior']['min']
+                high = self.parameters[p]['prior']['max']
+                ptform[i] = low + u[i] * (high - low)
+            elif self.parameters[p]['prior']['type'] == 'normal':
+                scale = self.parameters[p]['prior']['scale']
+                ptform[i] = t[i] * scale * scale + self.parameters[p]['prior']['loc']
+
+        return ptform

@@ -8,17 +8,20 @@ class datasaver:
         self.initialised = False
 
 
-    def save(self, name, data):
+    def save(self, samples, logps):
 
         if not self.initialised:
             with h5py.File(self.filename, 'w') as hf:
-                hf.create_dataset(name, data=data, compression="gzip", chunks=True, maxshape=(None, )+data.shape[1:]) 
+                hf.create_dataset('samples', data=samples, compression="gzip", chunks=True, maxshape=(None,)+samples.shape[1:])
+                hf.create_dataset('logprob', data=logps, compression="gzip", chunks=True, maxshape=(None,)+logps.shape[1:]) 
             self.initialised  = True
         else:
-            nsamples = data.shape[0]
             with h5py.File(self.filename, 'a') as hf:
-                hf[name].resize((hf[name].shape[0] + nsamples), axis = 0)
-                hf[name][-nsamples:] = data
+                hf['samples'].resize((hf['samples'].shape[0] + samples.shape[0]), axis = 0)
+                hf['samples'][-samples.shape[0]:] = samples
+
+                hf['logprob'].resize((hf['logprob'].shape[0] + logps.shape[0]), axis = 0)
+                hf['logprob'][-logps.shape[0]:] = logps
         
 
     def load(self, name):

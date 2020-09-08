@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Advanced Use &mdash; cronus 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FAQ" href="faq.html" />
+    <link rel="prev" title="Quick Start" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> cronus
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#log-likelihood-function">Log Likelihood Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-file">Parameter File</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#likelihood">Likelihood</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sampler">Sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diagnostics">Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#running-cronus">Running <strong>cronus</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#results">Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cronus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Advanced Use</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="advanced-use">
+<h1>Advanced Use<a class="headerlink" href="#advanced-use" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="log-likelihood-function">
+<h2>Log Likelihood Function<a class="headerlink" href="#log-likelihood-function" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="parameter-file">
+<h2>Parameter File<a class="headerlink" href="#parameter-file" title="Permalink to this headline">¶</a></h2>
+<p>The parameter file can generally include more information than the options presented in the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a> page.</p>
+<div class="section" id="likelihood">
+<h3>Likelihood<a class="headerlink" href="#likelihood" title="Permalink to this headline">¶</a></h3>
+<p>Usually the argument of the Log Likelihood function is a <em>1D numpy array</em> but we can also use a dictionary instead.
+To do so we need to add the <code class="docutils literal notranslate"><span class="pre">dictionary:</span> <span class="pre">True</span></code> option to the Likelihood block, for instance:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">Likelihood</span><span class="p">:</span>
+  <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">path/to/logprob.py</span>
+  <span class="nt">function</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">log_likelihood</span>
+  <span class="nt">dictionary</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<p>Every parameter needs to be either fixed or free:</p>
+<ul class="simple">
+<li><p>For fixed parameters we need to specify their value in Parameter block (i.e. parameter <code class="docutils literal notranslate"><span class="pre">a</span></code> in the following example).</p></li>
+<li><p>For free parameters we need to specify a prior instead. So far, only <code class="docutils literal notranslate"><span class="pre">uniform</span></code> and <code class="docutils literal notranslate"><span class="pre">normal</span></code> priors are supported.
+For a <code class="docutils literal notranslate"><span class="pre">uniform</span></code> prior we need to specify the uniform interval <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> (i.e. parameter <code class="docutils literal notranslate"><span class="pre">b</span></code> in the following
+example). For a <code class="docutils literal notranslate"><span class="pre">normal</span></code> prior we need to specify the mean <code class="docutils literal notranslate"><span class="pre">loc</span></code> and standard deviation <code class="docutils literal notranslate"><span class="pre">scale</span></code> (i.e. parameter
+<code class="docutils literal notranslate"><span class="pre">c</span></code> in the following example).</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">Parameters</span><span class="p">:</span>
+  <span class="nt">a</span><span class="p">:</span>
+    <span class="nt">fixed</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
+  <span class="nt">b</span><span class="p">:</span>
+    <span class="nt">prior</span><span class="p">:</span>
+      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
+      <span class="nt">min</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-1.0</span>
+      <span class="nt">max</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
+  <span class="nt">c</span><span class="p">:</span>
+    <span class="nt">prior</span><span class="p">:</span>
+      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">normal</span>
+      <span class="nt">loc</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0</span>
+      <span class="nt">scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sampler">
+<h3>Sampler<a class="headerlink" href="#sampler" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">cronus</span></code> supports three different samplers, <code class="docutils literal notranslate"><span class="pre">zeus</span></code> (Default), <code class="docutils literal notranslate"><span class="pre">emcee</span></code>, and <code class="docutils literal notranslate"><span class="pre">dynesty</span></code>. The prefered sampler can be specified
+using the <code class="docutils literal notranslate"><span class="pre">name</span></code> option in the <code class="docutils literal notranslate"><span class="pre">Sampler</span></code> section of the parameter file, for instance:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">Sampler</span><span class="p">:</span>
+  <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">zeus</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>When either <code class="docutils literal notranslate"><span class="pre">zeus</span></code> or <code class="docutils literal notranslate"><span class="pre">emcee</span></code> is used as the prefered sampler then the following options are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ndim</span></code> is the total number of parameters/dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nwalkers</span></code> is the total number of walkers (i.e. internal parallel chains for zeus or emcee). This number needs to
+be at least twice the number of free parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nchains</span></code> is the number of parallel chains, we recommend at least two and preferably 4 to get good estimate of the
+<em>Gelman-Rubin</em> diagnostic.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ncheck</span></code> specifies the number of steps after which the samples are saved and the <em>Convergence Criteria</em> are assessed.
+The default value is 100 which means that the samples are saved and convergence is diagnosed every 100 steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code> specifies the maximum number of iterations (Default is inf).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">miniter</span></code> specifies the minimum number of iterations (Default is 0).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxcall</span></code> specifies the maximum number of Log Likelihood evalluations/calls (Default is inf).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initial</span></code> controls the initialization of the walker positions. The available options are: <code class="docutils literal notranslate"><span class="pre">ellipse</span></code> (this is a small
+ellipse around the <em>Maximum a posteriori</em> estimate, this is the default and recommended choice), <code class="docutils literal notranslate"><span class="pre">laplace</span></code> (sample the
+initial positions of the walkers from the <em>Laplace approximation</em> of the posterior distribution), and <code class="docutils literal notranslate"><span class="pre">prior</span></code> (sample
+the initial positions from the prior distribution, not the best choice).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thin</span></code> is the thinning rate for the chains (i.e. if <code class="docutils literal notranslate"><span class="pre">thin=5</span></code> then save every 5th element to the chain). This can
+significantly reduce the size of the output files if the autocorrelation time of the chain is large. The default value is 1.</p></li>
+</ul>
+<p>When <code class="docutils literal notranslate"><span class="pre">dynesty</span></code> is used as the prefered sampler then the following options are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ndim</span></code> is the total number of parameters/dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bound</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dlogz</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code> specifies the maximum number of iterations (Default is inf).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxcall</span></code> specifies the maximum number of Log Likelihood evalluations/calls (Default is inf).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pfrac</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="diagnostics">
+<h3>Diagnostics<a class="headerlink" href="#diagnostics" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="running-cronus">
+<h2>Running <strong>cronus</strong><a class="headerlink" href="#running-cronus" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>When either <code class="docutils literal notranslate"><span class="pre">zeus</span></code> or <code class="docutils literal notranslate"><span class="pre">emcee</span></code> is used as the prefered sampler then the results are saved as <code class="docutils literal notranslate"><span class="pre">h5</span></code> files.
+There are as many <code class="docutils literal notranslate"><span class="pre">h5</span></code> files saved as the number of chains <code class="docutils literal notranslate"><span class="pre">nchains</span></code>. Each file contains two datasets, one
+called <code class="docutils literal notranslate"><span class="pre">samples</span></code> which constists of the samples as the name suggests, and one named <code class="docutils literal notranslate"><span class="pre">logprob</span></code> which includes
+the respective values of the Log Posterior Distribution.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="faq.html" class="btn btn-neutral float-right" title="FAQ" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Minas Karamanis
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -40,5 +40,5 @@ def run_script():
     # Import Log Likelihood function from file
     loglike_fn = import_loglikelihood(params)
 
-    # Run MCMC
-    sampler(params).run_mcmc(loglike_fn)
+    # Run Inference
+    sampler(params).run(loglike_fn)

@@ -25,6 +25,9 @@ def get_default(params):
     if 'path' not in params['Likelihood']:
         raise KeyError('Please provide the directory path to the file containing the log_prob function.')
 
+    if 'dictionary' not in params['Likelihood']:
+        params['Likelihood']['dictionary'] = False
+
     # Parameters
 
     for p in params['Parameters']:
@@ -43,7 +46,7 @@ def get_default(params):
     if 'name' not in params['Sampler']:
         params['Sampler']['name'] = 'zeus'
     else:
-        if params['Sampler']['name'] not in ['zeus', 'emcee']:
+        if params['Sampler']['name'] not in ['zeus', 'emcee', 'dynesty']:
             raise KeyError('Please use a valid sampler (i.e. zeus, emcee).')
 
     if 'ndim' not in params['Sampler']:
@@ -58,14 +61,17 @@ def get_default(params):
     if 'ncheck' not in params['Sampler']:
         params['Sampler']['ncheck'] = 100
 
-    if 'nmin' not in params['Sampler']:
-        params['Sampler']['nmin'] = 0
+    if 'miniter' not in params['Sampler']:
+        params['Sampler']['miniter'] = 0
 
-    if 'nmax' not in params['Sampler']:
-        params['Sampler']['nmax'] = np.inf
+    if 'maxiter' not in params['Sampler']:
+        params['Sampler']['maxiter'] = np.inf
 
-    if 'ncall' not in params['Sampler']:
-        params['Sampler']['ncall'] = np.inf
+    if 'maxcall' not in params['Sampler']:
+        params['Sampler']['maxcall'] = np.inf
+
+    if 'thin' not in params['Sampler']:
+        params['Sampler']['thin'] = 1
 
     if 'initial' not in params['Sampler']:
         params['Sampler']['initial'] = 'ellipse'
@@ -98,6 +104,7 @@ def get_default(params):
 
     # Output
 
-
+    if params['Output'][-1] != '/':
+        params['Output'] += '/'
 
     return params

@@ -6,12 +6,13 @@ from zeus import GelmanRubin, AutoCorrTime
 
 class diagnose:
 
-    def __init__(self, tau_epsilon=0.01, tau_multiple=100):
+    def __init__(self, tau_epsilon=0.01, tau_multiple=100, thin=1):
         self.taus = [np.inf]
         self.tau_epsilon = tau_epsilon
         self.tau_multiple = tau_multiple
         self.samples = None
         self.ndim = 1
+        self.thin = thin
 
 
     def add_samples(self, samples):
@@ -22,10 +23,10 @@ class diagnose:
 
     def test_act(self):
         old_tau = self.taus[-1]
-        tau = np.mean(AutoCorrTime(self.samples[self.nsamples//2:]))
+        tau = np.mean(AutoCorrTime(self.samples[self.nsamples//2:])) * self.thin
         self.taus.append(tau)
 
-        converged = np.all(tau * self.tau_multiple < self.nsamples)
+        converged = np.all(tau * self.tau_multiple / self.thin < self.nsamples)
         delta = np.abs(tau-old_tau) / tau
         converged &= np.all(delta < self.tau_epsilon)
         return converged, round(tau,1), round(delta,3)
