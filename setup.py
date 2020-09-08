@@ -3,12 +3,15 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("requirements.txt", 'r') as dependencies:
+    requirements = [pkg.strip() for pkg in dependencies]
+
 setuptools.setup(
     name="cronus",
-    version="0.0.1",
+    version="1.0.0",
     author="Minas Karamanis",
     author_email="minaskar@gmail.com",
-    description="cronus: Large Scale MCMC",
+    description="cronus: MCMC + MPI MADE EASY",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/minaskar/cronus",
@@ -21,7 +24,7 @@ setuptools.setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Mathematics',
     ],
-    install_requires=['numpy', 'tqdm'],
+    install_requires=requirements,
     python_requires='>=3.6',
     entry_points={
         'console_scripts': ['cronus-run=cronus.run:run_script'],

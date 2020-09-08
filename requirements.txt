@@ -1,0 +1,7 @@
+numpy
+scipy
+mpi4py
+zeus
+iminuit
+ruamel.yaml
+h5py
