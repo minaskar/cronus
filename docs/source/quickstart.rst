@@ -163,8 +163,8 @@ The files will iteratively be updated every few iterations.
                 data = np.copy(hf['samples'])
     
     The shape of the samples array would be ``(Iteration, nwalkers, ndim)``.
-    You can easily *flatten* this, combining all the walkers into one chain, by running:
+    You can easily *flatten* this, combining all the walkers into one chain discarding the first half of the chain, by running:
 
         .. code:: Python
 
-            data_flat = data.reshape(-1, ndim)
+            data_flat = data[data.shape[0]//2:].reshape(-1, data.shape[-1])

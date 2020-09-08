@@ -95,6 +95,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
             
@@ -306,9 +307,9 @@ IAT criteria are satisfied then sampling stops.</p></li>
 </div>
 </div></blockquote>
 <p>The shape of the samples array would be <code class="docutils literal notranslate"><span class="pre">(Iteration,</span> <span class="pre">nwalkers,</span> <span class="pre">ndim)</span></code>.
-You can easily <em>flatten</em> this, combining all the walkers into one chain, by running:</p>
+You can easily <em>flatten</em> this, combining all the walkers into one chain discarding the first half of the chain, by running:</p>
 <blockquote>
-<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data_flat</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
+<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data_flat</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
 </div></blockquote>

@@ -55,11 +55,3 @@ should get a message asking you for an input file, instead of a command not foun
 
     at the end of your ``~/.bashrc`` file, and restart the terminal or do source ``~/.bashrc``. Alternatively, simply
     add that line to your cluster jobscripts just before calling ``cronus-run``.
-
-
-Troubleshooting
-===============
-
-.. note::
-
-    export OMPI_MCA_pml=ob1

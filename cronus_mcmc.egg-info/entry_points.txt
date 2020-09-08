@@ -1,0 +1,3 @@
+[console_scripts]
+cronus-run = cronus.run:run_script
+

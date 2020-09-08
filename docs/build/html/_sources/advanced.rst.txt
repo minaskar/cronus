@@ -5,6 +5,29 @@ Advanced Use
 Log Likelihood Function
 =======================
 
+The Log Likelihood function needs to be defined in a separate ``.py`` file. It should be a function of **one argument**,
+either a numpy array or a dictionary.
+
+If you need to pass more information (e.g. data, covariance matrix, precision matrix, etc.) to the Log Likelihood function
+you should declare those as global variables. This is the easiest and most consistent way to make MPI not complain; it's also
+the most computationally efficient method (i.e. passing the whole dataset to all processes eveytime you call the function can
+be slow).
+
+Here we show a short toy example where we demonstrate how we should define such a function.
+
+.. code:: Python
+
+    import numpy as np
+
+    ndim = 10
+
+    data = np.random.randn(ndim) # Random data vector
+    C = np.identity(ndim) # Identity Covariance Matrix
+    Cinv = np.linalg.inv(C) # Inverse Covariance Matrix
+
+    def log_likelihood(x): # Normal distribution
+        return -0.5*np.dot(x, np.dot(Cinv, x))
+
 
 Parameter File
 ==============

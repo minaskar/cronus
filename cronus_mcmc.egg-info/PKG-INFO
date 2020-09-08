@@ -1,0 +1,45 @@
+Metadata-Version: 2.1
+Name: cronus-mcmc
+Version: 1.0.1
+Summary: cronus: MCMC + MPI MADE EASY
+Home-page: https://github.com/minaskar/cronus
+Author: Minas Karamanis
+Author-email: minaskar@gmail.com
+License: UNKNOWN
+Description: # cronus
+        
+        ![logo](logo.png)
+        
+        **cronus** is a Python tool designed to facilitate *Markov Chain Monte Carlo (MCMC)* and *Nested Sampling (NS)*
+        in large supercomputing clusters.
+        
+        It relies on the powerful MCMC sampler **zeus** to do the heavy-lifting and incorporates various MPI features
+        along with a suite of automated *Convergence Diagnostics*. 
+        
+        ``cronus`` is designed to be used via the terminal using parameter files and it is particularly suited for
+        Astrophysical and Cosmological applications.
+        
+        
+        ## Documentation
+        
+        Read the docs at [cronus-mcmc.readthedocs.io](https://cronus-mcmc.readthedocs.io)
+        
+        ## Attribution
+        
+        - Please cite X if you find this code useful in your research.
+        
+        
+        ## Licence
+        
+        Copyright 2020 Minas Karamanis and contributors.
+        
+        ``cronus`` is free software made available under the GPL-3.0 License.
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown

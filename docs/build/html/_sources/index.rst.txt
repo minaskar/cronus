@@ -22,6 +22,7 @@ Astrophysical and Cosmological applications.
    quickstart
    advanced
    faq
+   troubleshooting
 
 
 Getting Started
@@ -30,6 +31,7 @@ Getting Started
 - See the :doc:`quickstart` page for a simple example.
 - See the :doc:`advanced` page for more information about the ways ``cronus`` can be configured.
 - See the :doc:`faq` page for frequently asked questions.
+- See the :doc:`troubleshooting` page for any problems with ``cronus``.
 
 
 Attribution

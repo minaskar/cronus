@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; cronus 1.0.1 documentation</title>
+  <title>Troubleshooting &mdash; cronus 1.0.1 documentation</title>
   
 
   
@@ -34,8 +34,9 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-    <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="FAQ" href="faq.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,12 +82,19 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#infiniband">infiniband</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openmpi">OpenMPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#intel-mpi">Intel MPI</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -133,7 +141,7 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Index</li>
+      <li>Troubleshooting</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -150,11 +158,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+  <div class="section" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="infiniband">
+<h2>infiniband<a class="headerlink" href="#infiniband" title="Permalink to this headline">¶</a></h2>
+<p>There seem to be some issues with some <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code> features when used in a computing cluster with <em>infiniband</em>.
+This leads to <code class="docutils literal notranslate"><span class="pre">cronus</span></code> to hang in an <code class="docutils literal notranslate"><span class="pre">ìnfiniband</span></code> multi-node setting.</p>
+<div class="section" id="openmpi">
+<h3>OpenMPI<a class="headerlink" href="#openmpi" title="Permalink to this headline">¶</a></h3>
+<p>If you are using <code class="docutils literal notranslate"><span class="pre">OpenMPI</span></code> you can try including the following command which in your jobscript.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">OMPI_MCA_pml</span><span class="o">=</span>ob1
+</pre></div>
+</div>
+<p>This should disable the <em>infiniband</em> interface.</p>
+</div>
+<div class="section" id="intel-mpi">
+<h3>Intel MPI<a class="headerlink" href="#intel-mpi" title="Permalink to this headline">¶</a></h3>
+<p>The mpi4py package is using matching probes <code class="docutils literal notranslate"><span class="pre">(MPI_Mpobe)</span></code> for the receiving function <code class="docutils literal notranslate"><span class="pre">recv()</span></code> instead of regular
+<code class="docutils literal notranslate"><span class="pre">MPI_Recv</span></code> operations per default. These matching probes from the <code class="docutils literal notranslate"><span class="pre">MPI</span> <span class="pre">3.0</span></code> standard however are not supported
+for all fabrics, which may lead to a hang in the receiving function.</p>
+<p>Therefore, users are recommended to leverage the <code class="docutils literal notranslate"><span class="pre">OFI</span></code> fabric instead of <code class="docutils literal notranslate"><span class="pre">TMI</span></code> for <code class="docutils literal notranslate"><span class="pre">Omni-Path</span></code> systems. For the
+<code class="docutils literal notranslate"><span class="pre">Intel</span> <span class="pre">MPI</span> <span class="pre">Library</span></code>, the configuration could look like the following environment variable setting:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">I_MPI_FABRICS</span><span class="o">=</span>ofi
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -162,6 +191,13 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="faq.html" class="btn btn-neutral float-left" title="FAQ" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

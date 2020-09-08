@@ -105,6 +105,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
 
             
@@ -172,6 +173,25 @@
 <h1>Advanced Use<a class="headerlink" href="#advanced-use" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="log-likelihood-function">
 <h2>Log Likelihood Function<a class="headerlink" href="#log-likelihood-function" title="Permalink to this headline">¶</a></h2>
+<p>The Log Likelihood function needs to be defined in a separate <code class="docutils literal notranslate"><span class="pre">.py</span></code> file. It should be a function of <strong>one argument</strong>,
+either a numpy array or a dictionary.</p>
+<p>If you need to pass more information (e.g. data, covariance matrix, precision matrix, etc.) to the Log Likelihood function
+you should declare those as global variables. This is the easiest and most consistent way to make MPI not complain; it's also
+the most computationally efficient method (i.e. passing the whole dataset to all processes eveytime you call the function can
+be slow).</p>
+<p>Here we show a short toy example where we demonstrate how we should define such a function.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">ndim</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span> <span class="c1"># Random data vector</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span> <span class="c1"># Identity Covariance Matrix</span>
+<span class="n">Cinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="c1"># Inverse Covariance Matrix</span>
+
+<span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="c1"># Normal distribution</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Cinv</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="parameter-file">
 <h2>Parameter File<a class="headerlink" href="#parameter-file" title="Permalink to this headline">¶</a></h2>
