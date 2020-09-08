@@ -158,14 +158,52 @@ where, ``nprocesses`` is the number of available CPUs. Depending on the cluster 
 Results
 =======
 
-**zeus** or **emcee**
----------------------
+**zeus** or emcee
+-----------------
 
 When either ``zeus`` or ``emcee`` is used as the prefered sampler then the results are saved as ``h5`` files.
 There are as many ``h5`` files saved as the number of chains ``nchains``. Each file contains two datasets, one
 called ``samples`` which constists of the samples as the name suggests, and one named ``logprob`` which includes
 the respective values of the Log Posterior Distribution.
 
+After a few seconds of running the following files will be created in the provided ``Output`` directory:
+
+    .. code-block:: bash
+
+        chains
+            ├── chain_0.h5
+            ├── chain_1.h5
+            ├── ...
+            └── chain_[nchains].h5
+
+The files will iteratively be updated every few iterations.
+
+.. note::
+
+    You can access those results by doing:
+
+        .. code:: Python
+
+            import numpy as np
+            import h5py
+
+            with h5py.File('chains/chain_0.h5', "r") as hf:
+                samples = np.copy(hf['samples'])
+                logprob = np.copy(hf['logprob'])
+    
+    The shape of the samples array would be ``(Iteration, nwalkers, ndim)`` and the shape of the Log Posterior array will
+    be ``(Iteration, nwalkers)``. You can easily *flatten* this, combining all the walkers into one chain and discarding
+    the first half of the chain, by running:
+
+        .. code:: Python
+
+            nsamples, nwalkers, ndim_prime = np.shape(samples)
+
+            samples_flat = samples[nsamples//2:].reshape(-1, ndim_prime)
+
+            logprob_flat = logprob[nsamples//2:].reshape(-1, 1)
 
 dynesty
 -------
+
+When ``dynesty`` is used as the sampler then the results are saved as a numpy ``npy`` format file. 

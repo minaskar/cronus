@@ -98,7 +98,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#running-cronus">Running <strong>cronus</strong></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#results">Results</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#zeus-or-emcee"><strong>zeus</strong> or <strong>emcee</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zeus-or-emcee"><strong>zeus</strong> or emcee</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynesty">dynesty</a></li>
 </ul>
 </li>
@@ -303,14 +303,52 @@ more than this.</p>
 <div class="section" id="results">
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="zeus-or-emcee">
-<h3><strong>zeus</strong> or <strong>emcee</strong><a class="headerlink" href="#zeus-or-emcee" title="Permalink to this headline">¶</a></h3>
+<h3><strong>zeus</strong> or emcee<a class="headerlink" href="#zeus-or-emcee" title="Permalink to this headline">¶</a></h3>
 <p>When either <code class="docutils literal notranslate"><span class="pre">zeus</span></code> or <code class="docutils literal notranslate"><span class="pre">emcee</span></code> is used as the prefered sampler then the results are saved as <code class="docutils literal notranslate"><span class="pre">h5</span></code> files.
 There are as many <code class="docutils literal notranslate"><span class="pre">h5</span></code> files saved as the number of chains <code class="docutils literal notranslate"><span class="pre">nchains</span></code>. Each file contains two datasets, one
 called <code class="docutils literal notranslate"><span class="pre">samples</span></code> which constists of the samples as the name suggests, and one named <code class="docutils literal notranslate"><span class="pre">logprob</span></code> which includes
 the respective values of the Log Posterior Distribution.</p>
+<p>After a few seconds of running the following files will be created in the provided <code class="docutils literal notranslate"><span class="pre">Output</span></code> directory:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chains
+    ├── chain_0.h5
+    ├── chain_1.h5
+    ├── ...
+    └── chain_<span class="o">[</span>nchains<span class="o">]</span>.h5
+</pre></div>
+</div>
+</div></blockquote>
+<p>The files will iteratively be updated every few iterations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can access those results by doing:</p>
+<blockquote>
+<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">&#39;chains/chain_0.h5&#39;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hf</span><span class="p">:</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hf</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">])</span>
+    <span class="n">logprob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hf</span><span class="p">[</span><span class="s1">&#39;logprob&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The shape of the samples array would be <code class="docutils literal notranslate"><span class="pre">(Iteration,</span> <span class="pre">nwalkers,</span> <span class="pre">ndim)</span></code> and the shape of the Log Posterior array will
+be <code class="docutils literal notranslate"><span class="pre">(Iteration,</span> <span class="pre">nwalkers)</span></code>. You can easily <em>flatten</em> this, combining all the walkers into one chain and discarding
+the first half of the chain, by running:</p>
+<blockquote>
+<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">nsamples</span><span class="p">,</span> <span class="n">nwalkers</span><span class="p">,</span> <span class="n">ndim_prime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+
+<span class="n">samples_flat</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">nsamples</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim_prime</span><span class="p">)</span>
+
+<span class="n">logprob_flat</span> <span class="o">=</span> <span class="n">logprob</span><span class="p">[</span><span class="n">nsamples</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="dynesty">
 <h3>dynesty<a class="headerlink" href="#dynesty" title="Permalink to this headline">¶</a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">dynesty</span></code> is used as the sampler then the results are saved as a numpy <code class="docutils literal notranslate"><span class="pre">npy</span></code> format file.</p>
 </div>
 </div>
 </div>
