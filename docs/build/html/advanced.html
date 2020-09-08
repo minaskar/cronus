@@ -97,7 +97,11 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#running-cronus">Running <strong>cronus</strong></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#results">Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#results">Results</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#zeus-or-emcee"><strong>zeus</strong> or <strong>emcee</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynesty">dynesty</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -249,20 +253,65 @@ significantly reduce the size of the output files if the autocorrelation time of
 </div>
 <div class="section" id="diagnostics">
 <h3>Diagnostics<a class="headerlink" href="#diagnostics" title="Permalink to this headline">¶</a></h3>
+<p>So far <code class="docutils literal notranslate"><span class="pre">cronus</span></code> includes two distinct convergence diagnostics, the Gelman-Rubin statistic and the Autocorrelation Time test.
+Their combination seems to work well in Astrophysical and Cosmological likelihoods.</p>
+<p>Lets see how one can customize the thresholds of those criteria:</p>
+<ul class="simple">
+<li><p>Either of them can be turned off or on (Default) using the <code class="docutils literal notranslate"><span class="pre">use</span></code> argument.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">|R_hat</span> <span class="pre">-</span> <span class="pre">1|</span> <span class="pre">&lt;</span> <span class="pre">epsilon</span></code> is the threshold for the <em>Potential Scale Reduction Factor</em> (PSRF). We recommend to use a
+value of <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> that it is smaller than 0.05 (Default).</p></li>
+<li><p>In terms of the <em>Integrated Autocorrelation Time</em> (IAT) we provide two criteria, if the chain is longer than <code class="docutils literal notranslate"><span class="pre">nact</span> <span class="pre">=</span> <span class="pre">20</span></code>
+(Default) times the estimated IAT and the IAT has changed less than <code class="docutils literal notranslate"><span class="pre">dact</span> <span class="pre">=</span> <span class="pre">3%</span></code> (Default) the criteria are satisfied. If both
+<em>Gelman-Rubin</em> and IAT criteria are satisfied then sampling stops.</p></li>
+</ul>
+<p>All of the diagnostic options can be seen here:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">Diagnostics</span><span class="p">:</span>
+  <span class="nt">Gelman-Rubin</span><span class="p">:</span>
+    <span class="nt">use</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="nt">epsilon</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.05</span>
+  <span class="nt">Autocorrelation</span><span class="p">:</span>
+    <span class="nt">use</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="nt">nact</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+    <span class="nt">dact</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.03</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="output">
 <h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>The only option of the <code class="docutils literal notranslate"><span class="pre">Output</span></code> block is a directory path in which the samples/results will be saved. If
+the provided directory doesn't exist one will be created by <code class="docutils literal notranslate"><span class="pre">cronus</span></code>. The default directory is the current one.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">Output</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">path/to/output/folder/chains</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="running-cronus">
 <h2>Running <strong>cronus</strong><a class="headerlink" href="#running-cronus" title="Permalink to this headline">¶</a></h2>
+<p>To run <code class="docutils literal notranslate"><span class="pre">cronus</span></code>, given a parameter file <code class="docutils literal notranslate"><span class="pre">file.yaml</span></code>, we execute the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mpiexec -n <span class="o">[</span>nprocesses<span class="o">]</span> cronus-run file.yaml
+</pre></div>
+</div>
+<p>where, <code class="docutils literal notranslate"><span class="pre">nprocesses</span></code> is the number of available CPUs. Depending on the cluster you are using you may need to use
+<code class="docutils literal notranslate"><span class="pre">mpirun</span></code> or <code class="docutils literal notranslate"><span class="pre">srun</span></code> instead of <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For better performance we recommend to use a number of processes that can be divided by the number of chains <code class="docutils literal notranslate"><span class="pre">nchains</span></code>.
+Ideally, we recommend to use <code class="docutils literal notranslate"><span class="pre">nchains</span> <span class="pre">*</span> <span class="pre">(nwalkers/2</span> <span class="pre">+</span> <span class="pre">1)</span></code> if available, there's no real computational benefit in using
+more than this.</p>
+</div>
 </div>
 <div class="section" id="results">
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="zeus-or-emcee">
+<h3><strong>zeus</strong> or <strong>emcee</strong><a class="headerlink" href="#zeus-or-emcee" title="Permalink to this headline">¶</a></h3>
 <p>When either <code class="docutils literal notranslate"><span class="pre">zeus</span></code> or <code class="docutils literal notranslate"><span class="pre">emcee</span></code> is used as the prefered sampler then the results are saved as <code class="docutils literal notranslate"><span class="pre">h5</span></code> files.
 There are as many <code class="docutils literal notranslate"><span class="pre">h5</span></code> files saved as the number of chains <code class="docutils literal notranslate"><span class="pre">nchains</span></code>. Each file contains two datasets, one
 called <code class="docutils literal notranslate"><span class="pre">samples</span></code> which constists of the samples as the name suggests, and one named <code class="docutils literal notranslate"><span class="pre">logprob</span></code> which includes
 the respective values of the Log Posterior Distribution.</p>
+</div>
+<div class="section" id="dynesty">
+<h3>dynesty<a class="headerlink" href="#dynesty" title="Permalink to this headline">¶</a></h3>
+</div>
 </div>
 </div>
 

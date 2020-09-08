@@ -99,19 +99,73 @@ When ``dynesty`` is used as the prefered sampler then the following options are 
 Diagnostics
 -----------
 
+So far ``cronus`` includes two distinct convergence diagnostics, the Gelman-Rubin statistic and the Autocorrelation Time test.
+Their combination seems to work well in Astrophysical and Cosmological likelihoods.
+
+Lets see how one can customize the thresholds of those criteria:
+
+- Either of them can be turned off or on (Default) using the ``use`` argument.
+- ``|R_hat - 1| < epsilon`` is the threshold for the *Potential Scale Reduction Factor* (PSRF). We recommend to use a
+  value of ``epsilon`` that it is smaller than 0.05 (Default).
+- In terms of the *Integrated Autocorrelation Time* (IAT) we provide two criteria, if the chain is longer than ``nact = 20``
+  (Default) times the estimated IAT and the IAT has changed less than ``dact = 3%`` (Default) the criteria are satisfied. If both
+  *Gelman-Rubin* and IAT criteria are satisfied then sampling stops.
+
+All of the diagnostic options can be seen here:
+
+.. code:: yaml
+
+    Diagnostics:
+      Gelman-Rubin:
+        use: True
+        epsilon: 0.05
+      Autocorrelation:
+        use: True 
+        nact: 20
+        dact: 0.03
+
 
 Output
 ------
+
+The only option of the ``Output`` block is a directory path in which the samples/results will be saved. If
+the provided directory doesn't exist one will be created by ``cronus``. The default directory is the current one.
+
+.. code:: yaml
+
+    Output: path/to/output/folder/chains
 
 
 Running **cronus**
 ==================
 
+To run ``cronus``, given a parameter file ``file.yaml``, we execute the following command:
+
+.. code:: bash
+
+    $ mpiexec -n [nprocesses] cronus-run file.yaml
+
+where, ``nprocesses`` is the number of available CPUs. Depending on the cluster you are using you may need to use
+``mpirun`` or ``srun`` instead of ``mpiexec``.
+
+.. note::
+
+    For better performance we recommend to use a number of processes that can be divided by the number of chains ``nchains``.
+    Ideally, we recommend to use ``nchains * (nwalkers/2 + 1)`` if available, there's no real computational benefit in using
+    more than this.
+
 
 Results
 =======
+
+**zeus** or **emcee**
+---------------------
 
 When either ``zeus`` or ``emcee`` is used as the prefered sampler then the results are saved as ``h5`` files.
 There are as many ``h5`` files saved as the number of chains ``nchains``. Each file contains two datasets, one
 called ``samples`` which constists of the samples as the name suggests, and one named ``logprob`` which includes
 the respective values of the Log Posterior Distribution.
+
+
+dynesty
+-------
