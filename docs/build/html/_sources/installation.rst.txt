@@ -51,9 +51,15 @@ should get a message asking you for an input file, instead of a command not foun
 
         $ find `pwd` -iname cronus-run -printf %h\\n
 
+    in Linux, or::
+
+        $ which -a cronus-run
+    
+    in Mac OS X.
+
     This should print the location of the script, e.g. ``/home/you/.local/bin``. Add::
 
         $ export PATH="/home/you/.local/bin":$PATH
 
-    at the end of your ``~/.bashrc`` file, and restart the terminal or do source ``~/.bashrc``. Alternatively, simply
+    at the end of your ``~/.bashrc`` file, and restart the terminal or do ``source ~/.bashrc``. Alternatively, simply
     add that line to your cluster jobscripts just before calling ``cronus-run``.

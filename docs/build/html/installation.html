@@ -201,11 +201,16 @@ been added to your path.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ find `pwd` -iname cronus-run -printf %h\\n
 </pre></div>
 </div>
+<p>in Linux, or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ which -a cronus-run
+</pre></div>
+</div>
+<p>in Mac OS X.</p>
 <p>This should print the location of the script, e.g. <code class="docutils literal notranslate"><span class="pre">/home/you/.local/bin</span></code>. Add:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export PATH=&quot;/home/you/.local/bin&quot;:$PATH
 </pre></div>
 </div>
-<p>at the end of your <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code> file, and restart the terminal or do source <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code>. Alternatively, simply
+<p>at the end of your <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code> file, and restart the terminal or do <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">~/.bashrc</span></code>. Alternatively, simply
 add that line to your cluster jobscripts just before calling <code class="docutils literal notranslate"><span class="pre">cronus-run</span></code>.</p>
 </div>
 </div>
