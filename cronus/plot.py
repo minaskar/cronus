@@ -38,26 +38,154 @@ def traceplot(results, varnames=None, width=12, height=1.75, fontsize=14, show_m
     plt.show()
 
 
-def triangleplot(results, varnames=None, thin=10, height=2.5,
-                 scatterplot=True, histplot=True, kdeplot=True,
-                 s=5, scatter_color=".15", bins=30, pthresh=0.15, cmap="mako",
-                 kde_color="w", linewidths=2, linewidths_diag=2,
-                 savefig=False, filename='triangleplot.png', dpi=200):
+def cornerplot(samples,
+               labels=None,
+               weights=None,
+               levels=None,
+               quantiles=[0.025, 0.5, 0.975],
+               color=None,
+               alpha=0.5,
+               linewidth=1.5,
+               fill=True,
+               show_titles=True,
+               title_fmt='.2f',
+               cut=3,
+               fig=None,
+               size=(10,10)):
 
-    data = results.trace[::thin]
-    df = pd.DataFrame(data=data, index=[i for i in range(data.shape[0])], columns=results.varnames)
+    nsamples, ndim = samples.shape
 
-    if varnames is not None:
-        df = df[varnames]
+    if labels is None:
+        labels = [r"$x_{"+str(i+1)+"}$" for i in range(ndim)]
 
-    g = sns.PairGrid(df, diag_sharey=True, corner=True, despine=False, height=height)
-    if scatterplot:
-        g.map_lower(sns.scatterplot, s=s, color=scatter_color)
-    if histplot:
-        g.map_lower(sns.histplot, bins=bins, pthresh=pthresh, cmap=cmap)
-    if kdeplot:
-        g.map_lower(sns.kdeplot, levels=[0.3935, 0.8647], color=kde_color, linewidths=linewidths)
-    g.map_diag(sns.kdeplot, lw=linewidths_diag)
-    g.tight_layout()
-    if savefig:
-        g.savefig(filename, dpi=dpi)
+    if levels is None:
+        levels = list(1.0 - np.exp(-0.5 * np.arange(0.5, 2.1, 0.5) ** 2))
+    levels.append(1.0)
+    
+    if color is None:
+        color = "tab:blue"
+
+    idxs = np.arange(ndim**2).reshape(ndim, ndim)
+    tril = np.tril_indices(ndim)
+    triu = np.triu_indices(ndim)
+    lower = list(set(idxs[tril])-set(idxs[triu]))
+    upper = list(set(idxs[triu])-set(idxs[tril]))
+    
+    if fig is None:
+        figure, axes = plt.subplots(ndim, ndim, figsize=size, sharex=True)
+    else:
+        figure = fig[0]
+        axes = fig[1]
+
+    for idx, ax in enumerate(axes.flat):
+
+        i = idx // ndim
+        j = idx % ndim
+        
+        if idx in lower:
+            if fill:
+                ax = sns.kdeplot(x=samples[:,j], y=samples[:,i], weights=weights,
+                                fill=True, color=color,
+                                clip=None, cut=cut,
+                                thresh=levels[0], levels=levels,
+                                ax=ax, alpha=alpha, linewidth=0.0,
+                                )
+            ax = sns.kdeplot(x=samples[:,j], y=samples[:,i], weights=weights,
+                             fill=False, color=color,
+                             clip=None, cut=cut,
+                             thresh=levels[0], levels=levels,
+                             ax=ax, alpha=alpha, linewidth=linewidth,
+                             )
+
+            if j == 0:
+                ax.set_ylabel(labels[i])
+                ax.yaxis.set_major_locator(plt.MaxNLocator(5))
+                
+            else:
+                ax.yaxis.set_ticklabels([])
+
+            if i == ndim - 1:
+                ax.set_xlabel(labels[j])
+            
+        elif idx in upper:
+            ax.set_axis_off()
+        else:
+            if fill:
+                ax = sns.kdeplot(x=samples[:,j],
+                                fill=True, color=color, weights=weights,
+                                clip=None, cut=cut,
+                                ax=ax, linewidth=0.0, alpha=alpha,
+                                )
+            ax = sns.kdeplot(x=samples[:,j],
+                             fill=None, color=color, weights=weights,
+                             clip=None, cut=cut,
+                             ax=ax, linewidth=linewidth, alpha=alpha,
+                             )
+
+            if i == ndim - 1:
+                ax.set_xlabel(labels[j])
+
+            if show_titles:
+                ql, qm, qh = _quantile(samples[:,i], quantiles, weights=weights)
+                q_minus, q_plus = qm - ql, qh - qm
+                fmt = "{{0:{0}}}".format(title_fmt).format
+                title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
+                title = title.format(fmt(qm), fmt(q_minus), fmt(q_plus))
+                title = "{0} = {1}".format(labels[i], title)
+                ax.set_title(title)
+            
+
+            ax.set_ylabel("")
+            ax.set_yticks([])
+
+        [l.set_rotation(45) for l in ax.get_xticklabels()]
+        [l.set_rotation(45) for l in ax.get_yticklabels()]
+
+        ax.xaxis.set_major_locator(plt.MaxNLocator(5))
+        
+    
+    figure.subplots_adjust(top=0.95, right=0.95, wspace=.05, hspace=.05)
+
+    return figure, axes
+
+
+def _quantile(x, q, weights=None):
+    """
+    Compute (weighted) quantiles from an input set of samples.
+    Parameters
+    ----------
+    x : `~numpy.ndarray` with shape (nsamps,)
+        Input samples.
+    q : `~numpy.ndarray` with shape (nquantiles,)
+       The list of quantiles to compute from `[0., 1.]`.
+    weights : `~numpy.ndarray` with shape (nsamps,), optional
+        The associated weight from each sample.
+    Returns
+    -------
+    quantiles : `~numpy.ndarray` with shape (nquantiles,)
+        The weighted sample quantiles computed at `q`.
+    """
+
+    # Initial check.
+    x = np.atleast_1d(x)
+    q = np.atleast_1d(q)
+
+    # Quantile check.
+    if np.any(q < 0.0) or np.any(q > 1.0):
+        raise ValueError("Quantiles must be between 0. and 1.")
+
+    if weights is None:
+        # If no weights provided, this simply calls `np.percentile`.
+        return np.percentile(x, list(100.0 * q))
+    else:
+        # If weights are provided, compute the weighted quantiles.
+        weights = np.atleast_1d(weights)
+        if len(x) != len(weights):
+            raise ValueError("Dimension mismatch: len(weights) != len(x).")
+        idx = np.argsort(x)  # sort samples
+        sw = weights[idx]  # sort weights
+        cdf = np.cumsum(sw)[:-1]  # compute CDF
+        cdf /= cdf[-1]  # normalize CDF
+        cdf = np.append(0, cdf)  # ensure proper span
+        quantiles = np.interp(q, cdf, x[idx]).tolist()
+        return quantiles
