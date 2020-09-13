@@ -13,6 +13,7 @@ class diagnose:
         self.samples = None
         self.ndim = 1
         self.thin = thin
+        self.acts = []
 
 
     def add_samples(self, samples):
@@ -23,8 +24,10 @@ class diagnose:
 
     def test_act(self):
         old_tau = self.taus[-1]
-        tau = np.mean(AutoCorrTime(self.samples[self.nsamples//2:])) * self.thin
+        act = AutoCorrTime(self.samples[self.nsamples//2:]) * self.thin
+        tau = np.mean(act)
         self.taus.append(tau)
+        self.acts.append(act)
 
         converged = np.all(tau * self.tau_multiple / self.thin < self.nsamples)
         delta = np.abs(tau-old_tau) / tau

@@ -11,14 +11,13 @@ def get_default(params):
         raise KeyError('Please provide information about the Parameters.')
 
     if 'Sampler' not in params:
-        raise KeyError('Please provide information about the Sampler configuration.')
+        params['Sampler'] = {}
 
     if 'Diagnostics' not in params:
-        params['Diagnostics'] = {'Gelman-Rubin': {'use' : True, 'epsilon' : 0.05},
-                                 'Autocorrelation': {'use': True, 'nact' : 10, 'dact' : 0.01}}
+        params['Diagnostics'] = {}
 
     if 'Output' not in params:
-        params['Output'] = './'
+        params['Output'] = './chains'
 
     # Likelihood
 
@@ -50,13 +49,20 @@ def get_default(params):
             raise KeyError('Please use a valid sampler (i.e. zeus, emcee).')
 
     if 'ndim' not in params['Sampler']:
-        raise KeyError('Please provide the number of dimensions ndim.')
+        
+        ndim = 0
+        for p in params['Parameters']:
+            ndim += 1
+        params['Sampler']['ndim'] = ndim
 
     if 'nwalkers' not in params['Sampler']:
-        raise KeyError('Please provide the number of walkers nwalkers.')
+        nwalkers = int(2.5 * ndim)
+        if nwalkers % 2 == 1:
+            nwalkers += 1
+        params['Sampler']['nwalkers'] = nwalkers
 
     if 'nchains' not in params['Sampler']:
-        raise KeyError('Please provide the number of chains nchains.')
+        params['Sampler']['nchains'] = 2
 
     if 'ncheck' not in params['Sampler']:
         params['Sampler']['ncheck'] = 100
@@ -97,7 +103,7 @@ def get_default(params):
         params['Diagnostics']['Autocorrelation']['use'] = True
 
     if 'nact' not in params['Diagnostics']['Autocorrelation']:
-        params['Diagnostics']['Autocorrelation']['nact'] = 10
+        params['Diagnostics']['Autocorrelation']['nact'] = 20
 
     if 'dact' not in params['Diagnostics']['Autocorrelation']:
         params['Diagnostics']['Autocorrelation']['dact'] = 0.03
@@ -106,5 +112,5 @@ def get_default(params):
 
     if params['Output'][-1] != '/':
         params['Output'] += '/'
-
+    
     return params

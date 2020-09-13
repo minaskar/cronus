@@ -5,3 +5,6 @@ zeus-mcmc
 iminuit
 ruamel.yaml
 h5py
+tabulate
+pandas
+seaborn

@@ -9,6 +9,8 @@ from .mcmc import sampler
 from .default import get_default
 from .likelihood import import_loglikelihood
 
+from mpi4py import MPI
+
 import numpy as np
 
 import sys
