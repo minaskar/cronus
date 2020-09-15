@@ -73,8 +73,10 @@ def cornerplot(samples,
                alpha=0.5,
                linewidth=1.5,
                fill=True,
+               fontsize=10,
                show_titles=True,
                title_fmt='.2f',
+               title_fontsize=12,
                cut=3,
                fig=None,
                size=(10,10)):
@@ -103,10 +105,14 @@ def cornerplot(samples,
         Linewidth of plot (Default is 1.5).
     fill : bool
         If True (Default) the fill the 1D and 2D contours with color.
+    fontsize : float
+        Fontsize of axes labels. Default is 10.
     show_titles : bool
         Whether to display a title above each 1-D marginalized posterior showing the quantiles. Default is True.
     title_fmt : str
         Format of the titles. Default is ``.2f``.
+    title_fontsize : float
+        Fontsize of titles. Default is 12.
     cut : float
         Factor, multiplied by the smoothing bandwidth, that determines how far the evaluation grid extends past the extreme datapoints.
         When set to 0, truncate the curve at the data limits. Default is ``cut=3``.
@@ -161,10 +167,7 @@ def cornerplot(samples,
     for idx, ax in enumerate(axes.flat):
 
         i = idx // ndim
-        j = idx % ndim
-
-        
-        
+        j = idx % ndim        
         
         if idx in lower:
             
@@ -197,7 +200,7 @@ def cornerplot(samples,
 
             if i == ndim - 1:
                 ax.xaxis.set_major_locator(plt.MaxNLocator(5))
-                ax.set_xlabel(labels[j])
+                ax.set_xlabel(labels[j], fontsize=fontsize)
                 [l.set_rotation(45) for l in ax.get_xticklabels()]
             else:
                 ax.set_xticklabels([])
@@ -225,7 +228,7 @@ def cornerplot(samples,
                 ax.axvline(truth[j], color='k', lw=1.0)
 
             if i == ndim - 1:
-                ax.set_xlabel(labels[j])
+                ax.set_xlabel(labels[j], fontsize=fontsize)
                 [l.set_rotation(45) for l in ax.get_xticklabels()]
             else:
                 ax.set_xticklabels([])
@@ -237,14 +240,11 @@ def cornerplot(samples,
                 title = r"${{{0}}}_{{-{1}}}^{{+{2}}}$"
                 title = title.format(fmt(qm), fmt(q_minus), fmt(q_plus))
                 title = "{0} = {1}".format(labels[i], title)
-                ax.set_title(title)
+                ax.set_title(title, fontsize=title_fontsize)
             
 
         ax.set_xlim(span[j])
         ax.xaxis.set_major_locator(plt.MaxNLocator(5))
-
-        #[l.set_rotation(45) for l in ax.get_xticklabels()]
-        #[l.set_rotation(45) for l in ax.get_yticklabels()]
     
     figure.subplots_adjust(top=0.95, right=0.95, wspace=.05, hspace=.05)
 
