@@ -5,6 +5,30 @@ import seaborn as sns
 
 
 def traceplot(results, varnames=None, width=12, height=1.75, fontsize=14, show_mean=True, savefig=False, filename="traceplot.png", dpi=200):
+    r"""
+    Plot 1D marginal distributions and chains.
+
+    Parameters
+    ----------
+    results : class instance
+        cronus results object
+    varnames : list
+        list of labels for parameter names (Default is None)
+    width: float
+        width of figure (Default is 12)
+    height : float
+        height of individual subplots (Default is 1.75). The total height is ndim * 1.75.
+    fontsize : float
+        fontsize axes labels (Default is 14).
+    show_mean : bool
+        If True (Default) then show mean values.
+    savefig : bool
+        If True then save the figure to a file (Default is False).
+    filename : str
+        Name of the file for the figure to be saved in.
+    dpi : int
+        Image DPI for figure if filename format is png. Not required for PDF.
+    """
     if varnames is not None:
         npar = len(varnames)
     else:
@@ -42,7 +66,9 @@ def cornerplot(samples,
                labels=None,
                weights=None,
                levels=None,
+               span=None,
                quantiles=[0.025, 0.5, 0.975],
+               truth=None,
                color=None,
                alpha=0.5,
                linewidth=1.5,
@@ -52,8 +78,50 @@ def cornerplot(samples,
                cut=3,
                fig=None,
                size=(10,10)):
+    r"""
+    Plot corner-plot of samples.
 
-    nsamples, ndim = samples.shape
+    Parameters
+    ----------
+    samples : array
+        Array of shape (nsamples, ndim) containing the samples.
+    labels : list
+        List of names of for the parameters.
+    weights : array
+        Array with weights (useful if different samples have different weights e.g. as in Nested Sampling).
+    levels : list
+        The quantiles used for plotting the smoothed 2-D distributions. If not provided, these default to 0.5, 1, 1.5, and 2-sigma contours.
+    quantiles : list
+        A list of fractional quantiles to overplot on the 1-D marginalized posteriors as titles. Default is ``[0.025, 0.5, 0.975]`` (spanning the 95%/2-sigma credible interval).
+    truth : array
+        Array specifying a point to be highlighted in the plot. It can be the true values of the parameters, the mean, median etc. By default this is None.
+    color : str
+        Matplotlib color to be used in the plot.
+    alpha : float
+        Transparency value of figure (Default is 0.5).
+    linewidth : float
+        Linewidth of plot (Default is 1.5).
+    fill : bool
+        If True (Default) the fill the 1D and 2D contours with color.
+    show_titles : bool
+        Whether to display a title above each 1-D marginalized posterior showing the quantiles. Default is True.
+    title_fmt : str
+        Format of the titles. Default is ``.2f``.
+    cut : float
+        Factor, multiplied by the smoothing bandwidth, that determines how far the evaluation grid extends past the extreme datapoints.
+        When set to 0, truncate the curve at the data limits. Default is ``cut=3``.
+    fig : (figure, axes)
+        Pre-existing Figure and Axes for the plot. Otherwise create new internally. Default is None.
+    size : (int, int)
+        Size of the plot. Default is (10, 10).
+    
+    Returns
+    -------
+    Figure, Axes
+        The matplotlib figure and axes.
+    """
+
+    ndim = samples.shape[1]
 
     if labels is None:
         labels = [r"$x_{"+str(i+1)+"}$" for i in range(ndim)]
@@ -64,6 +132,19 @@ def cornerplot(samples,
     
     if color is None:
         color = "tab:blue"
+    
+    # Determine plotting bounds.
+    if span is None:
+        span = [0.999999426697 for i in range(ndim)]
+    span = list(span)
+    if len(span) != ndim:
+        raise ValueError("Dimension mismatch between samples and span.")
+    for i, _ in enumerate(span):
+        try:
+            xmin, xmax = span[i]
+        except:
+            q = [0.5 - 0.5 * span[i], 0.5 + 0.5 * span[i]]
+            span[i] = _quantile(samples[:,i], q, weights=weights)
 
     idxs = np.arange(ndim**2).reshape(ndim, ndim)
     tril = np.tril_indices(ndim)
@@ -72,7 +153,7 @@ def cornerplot(samples,
     upper = list(set(idxs[triu])-set(idxs[tril]))
     
     if fig is None:
-        figure, axes = plt.subplots(ndim, ndim, figsize=size, sharex=True)
+        figure, axes = plt.subplots(ndim, ndim, figsize=size, sharex=False)
     else:
         figure = fig[0]
         axes = fig[1]
@@ -81,8 +162,15 @@ def cornerplot(samples,
 
         i = idx // ndim
         j = idx % ndim
+
+        
+        
         
         if idx in lower:
+            
+            ax.set_ylim(span[i])
+            ax.yaxis.set_major_locator(plt.MaxNLocator(5))
+
             if fill:
                 ax = sns.kdeplot(x=samples[:,j], y=samples[:,i], weights=weights,
                                 fill=True, color=color,
@@ -97,19 +185,30 @@ def cornerplot(samples,
                              ax=ax, alpha=alpha, linewidth=linewidth,
                              )
 
+            if truth is not None:
+                ax.axvline(truth[j], color='k', lw=1.0)
+                ax.axhline(truth[i], color='k', lw=1.0)
+
             if j == 0:
                 ax.set_ylabel(labels[i])
-                ax.yaxis.set_major_locator(plt.MaxNLocator(5))
-                
+                [l.set_rotation(45) for l in ax.get_yticklabels()]
             else:
                 ax.yaxis.set_ticklabels([])
 
             if i == ndim - 1:
+                ax.xaxis.set_major_locator(plt.MaxNLocator(5))
                 ax.set_xlabel(labels[j])
-            
+                [l.set_rotation(45) for l in ax.get_xticklabels()]
+            else:
+                ax.set_xticklabels([])
+
+                        
         elif idx in upper:
             ax.set_axis_off()
         else:
+
+            ax.yaxis.set_major_locator(plt.NullLocator())
+
             if fill:
                 ax = sns.kdeplot(x=samples[:,j],
                                 fill=True, color=color, weights=weights,
@@ -122,9 +221,15 @@ def cornerplot(samples,
                              ax=ax, linewidth=linewidth, alpha=alpha,
                              )
 
+            if truth is not None:
+                ax.axvline(truth[j], color='k', lw=1.0)
+
             if i == ndim - 1:
                 ax.set_xlabel(labels[j])
-
+                [l.set_rotation(45) for l in ax.get_xticklabels()]
+            else:
+                ax.set_xticklabels([])
+            
             if show_titles:
                 ql, qm, qh = _quantile(samples[:,i], quantiles, weights=weights)
                 q_minus, q_plus = qm - ql, qh - qm
@@ -135,14 +240,11 @@ def cornerplot(samples,
                 ax.set_title(title)
             
 
-            ax.set_ylabel("")
-            ax.set_yticks([])
-
-        [l.set_rotation(45) for l in ax.get_xticklabels()]
-        [l.set_rotation(45) for l in ax.get_yticklabels()]
-
+        ax.set_xlim(span[j])
         ax.xaxis.set_major_locator(plt.MaxNLocator(5))
-        
+
+        #[l.set_rotation(45) for l in ax.get_xticklabels()]
+        #[l.set_rotation(45) for l in ax.get_yticklabels()]
     
     figure.subplots_adjust(top=0.95, right=0.95, wspace=.05, hspace=.05)
 

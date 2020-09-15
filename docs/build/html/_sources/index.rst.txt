@@ -23,6 +23,7 @@ Astrophysical and Cosmological applications.
    advanced
    faq
    troubleshooting
+   api
 
 
 Getting Started
@@ -32,6 +33,7 @@ Getting Started
 - See the :doc:`advanced` page for more information about the ways ``cronus`` can be configured.
 - See the :doc:`faq` page for frequently asked questions.
 - See the :doc:`troubleshooting` page for any problems with ``cronus``.
+- See the :doc:`api` page for a detailed API documentation.
 
 
 Attribution

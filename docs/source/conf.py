@@ -47,7 +47,7 @@ extensions = [
 
 # Generate the API documentation when building
 autosummary_generate = True
-numpydoc_show_class_members = True
+numpydoc_show_class_members = False
 
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True

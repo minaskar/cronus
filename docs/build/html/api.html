@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API &mdash; cronus 1.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Troubleshooting" href="troubleshooting.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> cronus
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#results-module">Results Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plotting-module">Plotting Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cronus</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="results-module">
+<h2>Results Module<a class="headerlink" href="#results-module" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="cronus.read_chains">
+<em class="property">class </em><code class="sig-prename descclassname">cronus.</code><code class="sig-name descname">read_chains</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">folder</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cronus.read_chains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to read <code class="docutils literal notranslate"><span class="pre">cronus</span></code> chains. It can be used when either <code class="docutils literal notranslate"><span class="pre">zeus</span></code> or <code class="docutils literal notranslate"><span class="pre">emcee</span></code> is used as the sampler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>str</em>) -- The directory path for run-folder that <code class="docutils literal notranslate"><span class="pre">cronus</span></code> created, e.g. chains/run5</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="cronus.read_chains.Autocorr">
+<code class="sig-name descname">Autocorr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">final</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cronus.read_chains.Autocorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrated Autocorrelation Time (IAT).</p>
+<dl class="simple">
+<dt>final<span class="classifier">bool</span></dt><dd><p>Show only the final estimate of IAT values or show all the estimates during the run.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>(Iterations), IAT</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(Array), Array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.ESS">
+<em class="property">property </em><code class="sig-name descname">ESS</code><a class="headerlink" href="#cronus.read_chains.ESS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Effective Sample Size of chains.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.GelmanRubin">
+<code class="sig-name descname">GelmanRubin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">final</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cronus.read_chains.GelmanRubin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gelman-Rubin Diagnostics.</p>
+<dl class="simple">
+<dt>final<span class="classifier">bool</span></dt><dd><p>Show only the final estimate of Gelman-Rubin R_hat values or show all the estimates during the run.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>(Iterations), R_hat</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(Array), Array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.MAP">
+<em class="property">property </em><code class="sig-name descname">MAP</code><a class="headerlink" href="#cronus.read_chains.MAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum a Posteriori Estimate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.Summary">
+<em class="property">property </em><code class="sig-name descname">Summary</code><a class="headerlink" href="#cronus.read_chains.Summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary statistics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.corr">
+<em class="property">property </em><code class="sig-name descname">corr</code><a class="headerlink" href="#cronus.read_chains.corr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Correlation matrix of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.cov">
+<em class="property">property </em><code class="sig-name descname">cov</code><a class="headerlink" href="#cronus.read_chains.cov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Covariance matrix of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.hessian">
+<em class="property">property </em><code class="sig-name descname">hessian</code><a class="headerlink" href="#cronus.read_chains.hessian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hessian Matrix computed for the Laplace approximation. It can be used as an approximate inverse Covariance Matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.mean">
+<em class="property">property </em><code class="sig-name descname">mean</code><a class="headerlink" href="#cronus.read_chains.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mean of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.median">
+<em class="property">property </em><code class="sig-name descname">median</code><a class="headerlink" href="#cronus.read_chains.median" title="Permalink to this definition">¶</a></dt>
+<dd><p>Median of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.one_sigma">
+<em class="property">property </em><code class="sig-name descname">one_sigma</code><a class="headerlink" href="#cronus.read_chains.one_sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>One  sigma constraints on parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.std">
+<em class="property">property </em><code class="sig-name descname">std</code><a class="headerlink" href="#cronus.read_chains.std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard deviation of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.three_sigma">
+<em class="property">property </em><code class="sig-name descname">three_sigma</code><a class="headerlink" href="#cronus.read_chains.three_sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Three  sigma constraints on parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.trace">
+<em class="property">property </em><code class="sig-name descname">trace</code><a class="headerlink" href="#cronus.read_chains.trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trace of chains i.e. Samples flattened to (nsamples, ndim) shape.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.two_sigma">
+<em class="property">property </em><code class="sig-name descname">two_sigma</code><a class="headerlink" href="#cronus.read_chains.two_sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two  sigma constraints on parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cronus.read_chains.var">
+<em class="property">property </em><code class="sig-name descname">var</code><a class="headerlink" href="#cronus.read_chains.var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variance of parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="plotting-module">
+<h2>Plotting Module<a class="headerlink" href="#plotting-module" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="cronus.traceplot">
+<code class="sig-prename descclassname">cronus.</code><code class="sig-name descname">traceplot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">results</span></em>, <em class="sig-param"><span class="n">varnames</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">12</span></em>, <em class="sig-param"><span class="n">height</span><span class="o">=</span><span class="default_value">1.75</span></em>, <em class="sig-param"><span class="n">fontsize</span><span class="o">=</span><span class="default_value">14</span></em>, <em class="sig-param"><span class="n">show_mean</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">savefig</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">'traceplot.png'</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">200</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cronus.traceplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot 1D marginal distributions and chains.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> (<em>class instance</em>) -- cronus results object</p></li>
+<li><p><strong>varnames</strong> (<em>list</em>) -- list of labels for parameter names (Default is None)</p></li>
+<li><p><strong>width</strong> (<em>float</em>) -- width of figure (Default is 12)</p></li>
+<li><p><strong>height</strong> (<em>float</em>) -- height of individual subplots (Default is 1.75). The total height is ndim * 1.75.</p></li>
+<li><p><strong>fontsize</strong> (<em>float</em>) -- fontsize axes labels (Default is 14).</p></li>
+<li><p><strong>show_mean</strong> (<em>bool</em>) -- If True (Default) then show mean values.</p></li>
+<li><p><strong>savefig</strong> (<em>bool</em>) -- If True then save the figure to a file (Default is False).</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) -- Name of the file for the figure to be saved in.</p></li>
+<li><p><strong>dpi</strong> (<em>int</em>) -- Image DPI for figure if filename format is png. Not required for PDF.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cronus.cornerplot">
+<code class="sig-prename descclassname">cronus.</code><code class="sig-name descname">cornerplot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">levels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">span</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">quantiles</span><span class="o">=</span><span class="default_value">[0.025, 0.5, 0.975]</span></em>, <em class="sig-param"><span class="n">truth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">fill</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">show_titles</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">title_fmt</span><span class="o">=</span><span class="default_value">'.2f'</span></em>, <em class="sig-param"><span class="n">cut</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">fig</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">10, 10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cronus.cornerplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot corner-plot of samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>array</em>) -- Array of shape (nsamples, ndim) containing the samples.</p></li>
+<li><p><strong>labels</strong> (<em>list</em>) -- List of names of for the parameters.</p></li>
+<li><p><strong>weights</strong> (<em>array</em>) -- Array with weights (useful if different samples have different weights e.g. as in Nested Sampling).</p></li>
+<li><p><strong>levels</strong> (<em>list</em>) -- The quantiles used for plotting the smoothed 2-D distributions. If not provided, these default to 0.5, 1, 1.5, and 2-sigma contours.</p></li>
+<li><p><strong>quantiles</strong> (<em>list</em>) -- A list of fractional quantiles to overplot on the 1-D marginalized posteriors as titles. Default is <code class="docutils literal notranslate"><span class="pre">[0.025,</span> <span class="pre">0.5,</span> <span class="pre">0.975]</span></code> (spanning the 95%/2-sigma credible interval).</p></li>
+<li><p><strong>truth</strong> (<em>array</em>) -- Array specifying a point to be highlighted in the plot. It can be the true values of the parameters, the mean, median etc. By default this is None.</p></li>
+<li><p><strong>color</strong> (<em>str</em>) -- Matplotlib color to be used in the plot.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) -- Transparency value of figure (Default is 0.5).</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em>) -- Linewidth of plot (Default is 1.5).</p></li>
+<li><p><strong>fill</strong> (<em>bool</em>) -- If True (Default) the fill the 1D and 2D contours with color.</p></li>
+<li><p><strong>show_titles</strong> (<em>bool</em>) -- Whether to display a title above each 1-D marginalized posterior showing the quantiles. Default is True.</p></li>
+<li><p><strong>title_fmt</strong> (<em>str</em>) -- Format of the titles. Default is <code class="docutils literal notranslate"><span class="pre">.2f</span></code>.</p></li>
+<li><p><strong>cut</strong> (<em>float</em>) -- Factor, multiplied by the smoothing bandwidth, that determines how far the evaluation grid extends past the extreme datapoints.
+When set to 0, truncate the curve at the data limits. Default is <code class="docutils literal notranslate"><span class="pre">cut=3</span></code>.</p></li>
+<li><p><strong>fig</strong> (<em>(</em><em>figure</em><em>, </em><em>axes</em><em>)</em>) -- Pre-existing Figure and Axes for the plot. Otherwise create new internally. Default is None.</p></li>
+<li><p><strong>size</strong> (<em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) -- Size of the plot. Default is (10, 10).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The matplotlib figure and axes.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Figure, Axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="troubleshooting.html" class="btn btn-neutral float-left" title="Troubleshooting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Minas Karamanis
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

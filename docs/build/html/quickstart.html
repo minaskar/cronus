@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
             
@@ -170,11 +171,18 @@ nodes. Another important feature of <code class="docutils literal notranslate"><
 <code class="docutils literal notranslate"><span class="pre">cronus</span></code> accepts as an input a parameter file that specifies the following:</p>
 <ul class="simple">
 <li><p>The Python file that contains the definition of the Log Likelihood function,</p></li>
-<li><p>A set of priors and/or fixed values for the different parameters of the model that enters the Log Likelihood function,</p></li>
+<li><p>A set of priors and/or fixed values for the different parameters of the model that enters the Log Likelihood function.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Paremeter file can also be used to specify some additional optional information, like:</p>
+<ul class="simple">
 <li><p>A set of parameters that configure the MCMC/NS sampler (e.g. number of walkers), those are usually trivial to define.</p></li>
 <li><p>A few threshold values for the <em>Convergence Diagnostics</em>,</p></li>
 <li><p>The path/directory for the results to be saved in.</p></li>
 </ul>
+<p>For more information about this please read the <a class="reference internal" href="advanced.html"><span class="doc">Advanced Use</span></a> page.</p>
+</div>
 <p>Once a parameter file is provided, <code class="docutils literal notranslate"><span class="pre">cronus</span></code> efficiently distributes the sampling tasks to all available CPUs and runs
 until Convergence is reached. The results are saved iteratively so that the researcher can monitor the progress.</p>
 <div class="figure align-default">
@@ -186,17 +194,21 @@ until Convergence is reached. The results are saved iteratively so that the rese
 <h2>Log Likelihood Function<a class="headerlink" href="#log-likelihood-function" title="Permalink to this headline">¶</a></h2>
 <p>The first thing we need to do is to create a Python file in which we define the Log Likelihood function. There is
 no real restricton to this. The model itself can be computed in any programming language (e.g. C, C++, Fortran) and
-the Log Likelihood can be a Python wrapper for this. In this example we will define a simple 3-dimensional Normal
-distribution with a diagonal covariance matrix.</p>
+the Log Likelihood can be a Python wrapper for this. In this example we will define a strongly-correlated
+<code class="docutils literal notranslate"><span class="pre">5-dimensional</span> <span class="pre">Normal</span> <span class="pre">distribution</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;OMP_NUM_THREADS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="n">ivar</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ndim</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span>
+<span class="n">C</span><span class="p">[</span><span class="n">C</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.95</span>
+<span class="n">Cinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ivar</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Cinv</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>We then save the file as <code class="docutils literal notranslate"><span class="pre">logprob.py</span></code>.</p>
@@ -238,20 +250,16 @@ variable <code class="docutils literal notranslate"><span class="pre">OMP_NUM_TH
       <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">normal</span>
       <span class="nt">loc</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
       <span class="nt">scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
-
-<span class="nt">Sampler</span><span class="p">:</span>
-  <span class="nt">ndim</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
-  <span class="nt">nwalkers</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
-  <span class="nt">nchains</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
-
-<span class="nt">Diagnostics</span><span class="p">:</span>
-  <span class="nt">Gelman-Rubin</span><span class="p">:</span>
-    <span class="nt">epsilon</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.05</span>
-  <span class="nt">Autocorrelation</span><span class="p">:</span>
-    <span class="nt">nact</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
-    <span class="nt">dact</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.03</span>
-
-<span class="nt">Output</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">chains</span>
+  <span class="nt">d</span><span class="p">:</span>
+    <span class="nt">prior</span><span class="p">:</span>
+      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">normal</span>
+      <span class="nt">loc</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0</span>
+      <span class="nt">scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2.5</span>
+  <span class="nt">e</span><span class="p">:</span>
+    <span class="nt">prior</span><span class="p">:</span>
+      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">normal</span>
+      <span class="nt">loc</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-0.5</span>
+      <span class="nt">scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
 </pre></div>
 </div>
 <p>You can see the following <em>sections</em> in the parameter file:</p>
@@ -259,19 +267,8 @@ variable <code class="docutils literal notranslate"><span class="pre">OMP_NUM_TH
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Likelihood</span></code> section which includes information about the path of the Log Likelihood function
 (i.e. both the directory/filename and the name of the function).</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section which includes the priors of fixed values for each parameter of the model.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Sampler</span></code> block which includes a few hyper-parameter values for the Sampler. Here <code class="docutils literal notranslate"><span class="pre">ndim</span></code> is the number of
-parameters/dimensions, <code class="docutils literal notranslate"><span class="pre">nwalkers</span></code> the number of parallel walkers of the ensemble (needs to be at least twice the
-number of free parameters), and <code class="docutils literal notranslate"><span class="pre">nchains</span></code> is the number of parallel chains. By default <code class="docutils literal notranslate"><span class="pre">cronus</span></code> relies on <code class="docutils literal notranslate"><span class="pre">zeus</span></code>
-to do all the heavy-lifting, but you can also specify other samplers (see the <a class="reference internal" href="advanced.html"><span class="doc">Advanced Use</span></a> page for more information).</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Diagnostics</span></code> block is where we define the thresholds for the various <em>Convergence Diagnostics</em>. In this case
-<code class="docutils literal notranslate"><span class="pre">|R_hat</span> <span class="pre">-</span> <span class="pre">1|</span> <span class="pre">&lt;</span> <span class="pre">epsilon</span></code> is the threshold for the <em>Potential Scale Reduction Factor</em> (PSRF). In terms of the
-<em>Integrated Autocorrelation Time</em> (IAT) we provide two criteria, if the chain is longer than <code class="docutils literal notranslate"><span class="pre">nact</span> <span class="pre">=</span> <span class="pre">20</span></code> times the
-estimated IAT and the IAT has changed less than <code class="docutils literal notranslate"><span class="pre">dact</span> <span class="pre">=</span> <span class="pre">3%</span></code> the criteria are satisfied. If both <em>Gelman-Rubin</em> and
-IAT criteria are satisfied then sampling stops.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Output</span></code> option specifies the output directory for the results to be saved in. If there's no such directory then
-<code class="docutils literal notranslate"><span class="pre">cronus</span></code> will build one.</p></li>
 </ul>
-<p>For more information about the options in the parameter file please see the <a class="reference internal" href="advanced.html"><span class="doc">Advanced Use</span></a> page.</p>
+<p>For more information about these and additional options in the parameter file please see the <a class="reference internal" href="advanced.html"><span class="doc">Advanced Use</span></a> page.</p>
 </div>
 <div class="section" id="run-cronus">
 <h2>Run cronus<a class="headerlink" href="#run-cronus" title="Permalink to this headline">¶</a></h2>
@@ -283,36 +280,80 @@ IAT criteria are satisfied then sampling stops.</p></li>
 </div>
 <div class="section" id="results">
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
-<p>After a few seconds the following files will be created in the provided <code class="docutils literal notranslate"><span class="pre">Output</span></code> directory:</p>
+<p>After a few seconds, an output directory will be created containing the following files:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chains
-    ├── chain_0.h5
-    ├── chain_1.h5
-    ├── chain_2.h5
-    └── chain_3.h5
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chains/run1
+         ├── chain_0.h5
+         ├── chain_1.h5
+         ├── IAT_0.dat
+         ├── IAT_1.dat
+         ├── GelmanRubin.dat
+         ├── MAP.npy
+         ├── hessian.npy
+         ├── para.yaml
+         ├── results.dat
+         └── varnames.dat
 </pre></div>
 </div>
 </div></blockquote>
-<p>The files will iteratively be updated every few iterations.</p>
+<p>All but the <code class="docutils literal notranslate"><span class="pre">results.dat</span></code> file will be created shortly. The files will iteratively be updated every few iterations.
+Once the sampling is done, the <code class="docutils literal notranslate"><span class="pre">results.dat</span></code> file will be added to the list.</p>
+<p>Let's have a look at what each of those files contains:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">chain_x.h5</span></code> files contain  the actual MCMC samples.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">IAT_x.dat</span></code> files contain the estimated <em>Integrated Autocorrelation Time</em> (IAT) for each and parameter.
+This is a measure of how independent the chain samples are (i.e. the lower the IAT the better).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">GelmanRubin.dat</span></code> file contains the <em>Gelman-Rubin</em> <code class="docutils literal notranslate"><span class="pre">R_hat</span></code> diagnostic for each parameter.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">MAP.npy</span></code> file contains the <em>Maximum a Posteriori</em> (MAP) estimate.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">hessian.npy</span></code> file contains the <em>Hessian matrix</em> evaluated at the MAP.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">para.yaml</span></code> file is a copy of the original parameter file with some extra information explicitly described.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">results.dat</span></code> file includes a summary of the results (e.g. mean, std, 1-sigma, 2-sigma, etc.).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">varnames.dat</span></code> file contains a list of the parameter names.</p></li>
+</ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>You can access those results by doing:</p>
+<p>If we can open the <code class="docutils literal notranslate"><span class="pre">results.dat</span></code> file using a text editor we will see the following:</p>
 <blockquote>
-<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">h5py</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">Name</span>   <span class="o">|</span>      <span class="n">MAP</span> <span class="o">|</span>     <span class="n">mean</span> <span class="o">|</span>   <span class="n">median</span> <span class="o">|</span>      <span class="n">std</span> <span class="o">|</span>   <span class="o">-</span><span class="mi">1</span> <span class="n">sigma</span> <span class="o">|</span>   <span class="o">+</span><span class="mi">1</span> <span class="n">sigma</span> <span class="o">|</span>   <span class="o">-</span><span class="mi">2</span> <span class="n">sigma</span> <span class="o">|</span>   <span class="o">+</span><span class="mi">2</span> <span class="n">sigma</span> <span class="o">|</span>     <span class="n">IAT</span> <span class="o">|</span>     <span class="n">ESS</span> <span class="o">|</span>   <span class="n">R_hat</span> <span class="o">|</span>
+<span class="o">|--------+----------+----------+----------+----------+------------+------------+------------+------------+---------+---------+---------|</span>
+<span class="o">|</span> <span class="n">a</span>      <span class="o">|</span> <span class="mf">0.885898</span> <span class="o">|</span> <span class="mf">0.881579</span> <span class="o">|</span> <span class="mf">0.879316</span> <span class="o">|</span> <span class="mf">0.304584</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.301652</span> <span class="o">|</span>   <span class="mf">0.308398</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.609184</span> <span class="o">|</span>   <span class="mf">0.609584</span> <span class="o">|</span> <span class="mf">6.82365</span> <span class="o">|</span> <span class="mf">4044.76</span> <span class="o">|</span>  <span class="mi">1</span>      <span class="o">|</span>
+<span class="o">|</span> <span class="n">c</span>      <span class="o">|</span> <span class="mf">0.891147</span> <span class="o">|</span> <span class="mf">0.879663</span> <span class="o">|</span> <span class="mf">0.881513</span> <span class="o">|</span> <span class="mf">0.298963</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.301561</span> <span class="o">|</span>   <span class="mf">0.293607</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.603484</span> <span class="o">|</span>   <span class="mf">0.59629</span>  <span class="o">|</span> <span class="mf">6.87625</span> <span class="o">|</span> <span class="mf">4013.82</span> <span class="o">|</span>  <span class="mf">1.0003</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">d</span>      <span class="o">|</span> <span class="mf">0.878582</span> <span class="o">|</span> <span class="mf">0.880138</span> <span class="o">|</span> <span class="mf">0.881647</span> <span class="o">|</span> <span class="mf">0.307091</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.311894</span> <span class="o">|</span>   <span class="mf">0.302304</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.617898</span> <span class="o">|</span>   <span class="mf">0.611955</span> <span class="o">|</span> <span class="mf">6.814</span>   <span class="o">|</span> <span class="mf">4050.48</span> <span class="o">|</span>  <span class="mf">1.0006</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">e</span>      <span class="o">|</span> <span class="mf">0.818762</span> <span class="o">|</span> <span class="mf">0.807181</span> <span class="o">|</span> <span class="mf">0.807153</span> <span class="o">|</span> <span class="mf">0.297321</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.29532</span>  <span class="o">|</span>   <span class="mf">0.294845</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">0.593549</span> <span class="o">|</span>   <span class="mf">0.597654</span> <span class="o">|</span> <span class="mf">6.5086</span>  <span class="o">|</span> <span class="mf">4240.54</span> <span class="o">|</span>  <span class="mf">1.0002</span> <span class="o">|</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<p>Now let's see how we can easily access this information using <code class="docutils literal notranslate"><span class="pre">cronus</span></code>.</p>
+<p>The first thing we want to do is read the chains using the <code class="docutils literal notranslate"><span class="pre">read_chains</span></code> module of <code class="docutils literal notranslate"><span class="pre">cronus</span></code>:</p>
+<blockquote>
+<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cronus</span>
 
-<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">&#39;chains/chain_0.h5&#39;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hf</span><span class="p">:</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hf</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">])</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">cronus</span><span class="o">.</span><span class="n">read_chains</span><span class="p">(</span><span class="s1">&#39;chains/run1&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">Summary</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
-<p>The shape of the samples array would be <code class="docutils literal notranslate"><span class="pre">(Iteration,</span> <span class="pre">nwalkers,</span> <span class="pre">ndim)</span></code>.
-You can easily <em>flatten</em> this, combining all the walkers into one chain discarding the first half of the chain, by running:</p>
+<p>This will print the contents of the <code class="docutils literal notranslate"><span class="pre">results.dat</span></code> file.</p>
+<p>We can easily create some plots by running:</p>
 <blockquote>
-<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data_flat</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">cronus</span><span class="o">.</span><span class="n">traceplot</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
+<p>to get the following <code class="docutils literal notranslate"><span class="pre">traceplot</span></code>:</p>
+<div class="figure align-default">
+<img alt="_images/traceplot.png" src="_images/traceplot.png" />
+</div>
+<p>Or, run the following to get a <code class="docutils literal notranslate"><span class="pre">cornerplot</span></code>:</p>
+<blockquote>
+<div><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">cronus</span><span class="o">.</span><span class="n">cornerplot</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">trace</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">varnames</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="figure align-default">
+<img alt="_images/cornerplot.png" src="_images/cornerplot.png" />
 </div>
 </div>
 </div>

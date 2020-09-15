@@ -4,8 +4,16 @@ import h5py
 import glob
 from tabulate import tabulate
 
-class read_chains:
 
+class read_chains:
+    r"""
+    Class to read ``cronus`` chains. It can be used when either ``zeus`` or ``emcee`` is used as the sampler.
+
+    Parameters
+    ----------
+    folder : str
+        The directory path for run-folder that ``cronus`` created, e.g. chains/run5
+    """
     def __init__(self, folder):
         if folder[-1] !=  "/":
             folder += "/"
@@ -46,60 +54,108 @@ class read_chains:
 
     @property
     def MAP(self):
+        r"""
+        Maximum a Posteriori Estimate.
+        """
         return self._map
 
     @property
     def hessian(self):
+        r"""
+        Hessian Matrix computed for the Laplace approximation. It can be used as an approximate inverse Covariance Matrix.
+        """
         return self._hessian
 
     @property
     def trace(self):
+        r"""
+        Trace of chains i.e. Samples flattened to (nsamples, ndim) shape.
+        """
         return self.samples.reshape((-1,  self.ndim))
 
     @property
     def mean(self):
+        r"""
+        Mean of parameters.
+        """
         return np.mean(self.trace, axis=0)
 
     @property
     def median(self):
+        r"""
+        Median of parameters.
+        """
         return np.median(self.trace, axis=0)
 
     @property
     def one_sigma(self):
+        r"""
+        One  sigma constraints on parameters.
+        """
         percentiles = [50., 15.86555, 84.13445]
         vals = np.percentile(self.trace, percentiles, axis=0)
         return [-(vals[0] - vals[1]), vals[2] - vals[0]]
 
     @property
     def two_sigma(self):
+        r"""
+        Two  sigma constraints on parameters.
+        """
         percentiles = [50, 2.2775, 97.7225]
         vals = np.percentile(self.trace, percentiles, axis=0)
         return [-(vals[0] - vals[1]), vals[2] - vals[0]]
 
     @property
     def three_sigma(self):
+        r"""
+        Three  sigma constraints on parameters.
+        """
         percentiles = [50, 0.135, 99.865]
         vals = np.percentile(self.trace, percentiles, axis=0)
         return [-(vals[0] - vals[1]), vals[2] - vals[0]]
 
     @property
     def std(self):
+        r"""
+        Standard deviation of parameters.
+        """
         return np.std(self.trace, axis=0)
 
     @property
     def var(self):
+        r"""
+        Variance of parameters.
+        """
         return np.var(self.trace, axis=0)
 
     @property
     def cov(self):
+        r"""
+        Covariance matrix of parameters.
+        """
         pass
 
     @property
     def corr(self):
+        r"""
+        Correlation matrix of parameters.
+        """
         pass
 
 
     def GelmanRubin(self, final=True):
+        r"""
+        Gelman-Rubin Diagnostics.
+
+        Paramaters
+        ----------
+        final : bool
+            Show only the final estimate of Gelman-Rubin R_hat values or show all the estimates during the run.
+
+        Returns
+        -------
+        (Iterations), R_hat : (Array), Array
+        """
         if final:
             return self._gelmanrubin[-1]
         else:
@@ -107,6 +163,18 @@ class read_chains:
         
 
     def Autocorr(self, final=True):
+        r"""
+        Integrated Autocorrelation Time (IAT).
+
+        Paramaters
+        ----------
+        final : bool
+            Show only the final estimate of IAT values or show all the estimates during the run.
+
+        Returns
+        -------
+        (Iterations), IAT : (Array), Array
+        """
         if final:
             return self._autocorr[-1]
         else:
@@ -114,10 +182,16 @@ class read_chains:
 
     @property
     def ESS(self):
+        r"""
+        Effective Sample Size of chains.
+        """
         return self.nsamples * self.nwalkers * self.nchains / self.Autocorr()
 
     @property
     def Summary(self):
+        r"""
+        Summary statistics.
+        """
         headers = ["Name", "MAP", "mean", "median", "std", "-1 sigma", "+1 sigma", "-2 sigma", "+2 sigma", "IAT", "ESS", "R_hat"]
         data = []
         for i, p in enumerate(self.varnames):

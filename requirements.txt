@@ -6,5 +6,5 @@ iminuit
 ruamel.yaml
 h5py
 tabulate
-pandas
+matplotlib
 seaborn
