@@ -30,7 +30,8 @@ class diagnose:
         self.acts.append(act)
 
         converged = np.all(tau * self.tau_multiple / self.thin < self.nsamples)
-        delta = np.abs(tau-old_tau) / tau
+        #delta = np.abs(tau-old_tau) / tau
+        delta = (tau - old_tau) / tau
         converged &= np.all(delta < self.tau_epsilon)
         return converged, round(tau,1), round(delta,3)
 

@@ -91,7 +91,7 @@ def get_default(params):
         params['Diagnostics']['Gelman-Rubin'] = {'use' : True, 'epsilon' : 0.05}
 
     if 'Autocorrelation' not in params['Diagnostics']:
-        params['Diagnostics']['Autocorrelation'] = {'use': True, 'nact' : 10, 'dact' : 0.03}
+        params['Diagnostics']['Autocorrelation'] = {'use': True, 'nact' : 25, 'dact' : 0.01}
 
     if 'use' not in params['Diagnostics']['Gelman-Rubin']:
         params['Diagnostics']['Gelman-Rubin']['use'] = True
@@ -103,10 +103,10 @@ def get_default(params):
         params['Diagnostics']['Autocorrelation']['use'] = True
 
     if 'nact' not in params['Diagnostics']['Autocorrelation']:
-        params['Diagnostics']['Autocorrelation']['nact'] = 20
+        params['Diagnostics']['Autocorrelation']['nact'] = 25
 
     if 'dact' not in params['Diagnostics']['Autocorrelation']:
-        params['Diagnostics']['Autocorrelation']['dact'] = 0.03
+        params['Diagnostics']['Autocorrelation']['dact'] = 0.01
 
     # Output
 
