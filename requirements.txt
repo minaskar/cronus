@@ -1,7 +1,7 @@
 numpy
 scipy
 mpi4py
-zeus-mcmc
+#zeus-mcmc
 iminuit
 ruamel.yaml
 h5py
