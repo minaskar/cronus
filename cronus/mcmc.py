@@ -83,7 +83,7 @@ class sampler:
             
             # Initialize Sampler
             if self.name == 'zeus':
-                sampler = zeus.sampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool, verbose=False)
+                sampler = zeus.EnsembleSampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool, verbose=False)
             elif self.name == 'emcee':
                 sampler = emcee.EnsembleSampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool)
             
