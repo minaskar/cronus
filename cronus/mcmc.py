@@ -76,7 +76,7 @@ class sampler:
                 with open(self.output + "para.yaml", mode='w') as f:
                     yaml.dump(self.params, f)
             self.output = cm.bcast(self.output, root=0)
-
+            #print('H', flush=True)
             # Define Log Posterior
             distribution = Distribution(self.params, loglike_fn)
             logpost_fn = distribution.get_logposterior

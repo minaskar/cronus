@@ -3,3 +3,4 @@ examples/
 .ipynb_checkpoints/
 cronus/__pycache__/
 cronus.egg-info/
+cronus_mcmc.egg-info/

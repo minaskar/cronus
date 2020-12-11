@@ -1,7 +1,9 @@
 numpy
 scipy
 mpi4py
-zeus-mcmc
 iminuit
 ruamel.yaml
 h5py
+tabulate
+matplotlib
+seaborn

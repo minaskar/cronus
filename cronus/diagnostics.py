@@ -1,7 +1,40 @@
 import numpy as np
 
-from zeus import GelmanRubin, AutoCorrTime
+from zeus import AutoCorrTime
 
+
+def GelmanRubin(chains):
+    '''
+    Gelman-Rubin convergence statistic.
+    '''
+
+    chains = np.array(chains)
+
+    # Number and length of chains
+    M, N, _ = np.shape(chains)
+
+    # Within chain variance
+    W = 0.0
+    for chain in chains:
+        W += np.var(chain, axis=0)
+    W /= M
+
+    # Means of chains
+    means = []
+    for chain in chains:
+        means.append(np.mean(chain, axis=0))
+    means = np.array(means)
+
+    # Between chain variance
+    B = N * np.var(means, ddof=1, axis=0)
+
+    # Weighted variance
+    Var_hat = (1.0 - 1.0 / N) * W + B / N
+
+    # Return R_hat statistic
+    R_hat = np.sqrt(Var_hat / W)
+
+    return R_hat
 
 
 class diagnose:
