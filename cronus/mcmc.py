@@ -16,7 +16,7 @@ from .results import read_chains
 
 class sampler:
 
-    def __init__(self, params):
+    def __init__(self, params, comm):
         self.params = params
         
         # Sampler
@@ -41,6 +41,8 @@ class sampler:
         # Output
         self.output = params['Output'] + "/"
 
+        self.comm = comm
+
     
     def run(self, loglike_fn):
         if self.name in ['zeus', 'emcee']:
@@ -56,7 +58,7 @@ class sampler:
         elif self.name == 'emcee':
             import emcee
 
-        with ChainManager(self.nchains) as cm:
+        with ChainManager(self.nchains, self.comm) as cm:
 
             rank = cm.get_rank
 
@@ -102,6 +104,8 @@ class sampler:
             f0s = cm.allgather(f0)
             h0s = cm.allgather(h0)
             start = ensemble.get_walkers(x0s[np.argmin(f0s)], h0s[np.argmin(f0s)])
+            if rank==0:
+                print('Walkers initialised...', end='\r', flush=True)
             if rank==0:
                 np.save(self.output+'MAP.npy', x0s[np.argmin(f0s)])
                 np.save(self.output+'hessian.npy', h0s[np.argmin(f0s)])

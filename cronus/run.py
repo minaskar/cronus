@@ -10,6 +10,7 @@ from .default import get_default
 from .likelihood import import_loglikelihood
 
 from mpi4py import MPI
+comm = MPI.COMM_WORLD
 
 import numpy as np
 
@@ -38,9 +39,9 @@ def run_script():
         os.makedirs(params['Output'])
     except:
         pass
-
+    print('Import likelihood....', end='\r', flush=True)
     # Import Log Likelihood function from file
     loglike_fn = import_loglikelihood(params)
 
     # Run Inference
-    sampler(params).run(loglike_fn)
+    sampler(params, comm).run(loglike_fn)
