@@ -9,14 +9,14 @@ from ruamel.yaml import YAML
 from .save import datasaver
 from .diagnostics import diagnose, test_gelmanrubin
 from .bayes import Distribution
-from .likelihood import import_loglikelihood
-from .start import initialize_walkers
-from .optimize import find_MAP
 from .results import read_chains
+from .helpers import damp_paramfile, initialise_sampler, create_gelmanrubin, create_varnames, create_IAT, get_starting_positions
+from .helpers import append_IAT, append_GR, print_status, save_results
+
 
 class sampler:
 
-    def __init__(self, params, comm):
+    def __init__(self, params):
         self.params = params
         
         # Sampler
@@ -41,7 +41,7 @@ class sampler:
         # Output
         self.output = params['Output'] + "/"
 
-        self.comm = comm
+        #self.comm = comm
 
     
     def run(self, loglike_fn):
@@ -53,41 +53,21 @@ class sampler:
 
     def run_mcmc(self, loglike_fn):
 
-        if self.name == 'zeus':
-            import zeus
-        elif self.name == 'emcee':
-            import emcee
-
-        with ChainManager(self.nchains, self.comm) as cm:
+        with ChainManager(self.nchains) as cm:
 
             rank = cm.get_rank
 
             # Create run folder
             if rank == 0:
-                nrun = 1
-                while True:
-                    path = self.output + "run" + str(nrun) + "/"
-                    if os.path.isdir(path):
-                        nrun += 1
-                    else:
-                        self.output = path
-                        break
-                os.makedirs(path)
-                # Dump full parameter file
-                yaml = YAML()
-                with open(self.output + "para.yaml", mode='w') as f:
-                    yaml.dump(self.params, f)
+                self.output = damp_paramfile(self.output, self.params)
             self.output = cm.bcast(self.output, root=0)
-            #print('H', flush=True)
+
             # Define Log Posterior
             distribution = Distribution(self.params, loglike_fn)
             logpost_fn = distribution.get_logposterior
             
             # Initialize Sampler
-            if self.name == 'zeus':
-                sampler = zeus.EnsembleSampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool, verbose=False)
-            elif self.name == 'emcee':
-                sampler = emcee.EnsembleSampler(self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool)
+            sampler = initialise_sampler(self.name, self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool)
             
             # Initialize Datasaver
             d = datasaver(self.output+'chain_'+str(cm.get_rank)+'.h5')
@@ -98,35 +78,17 @@ class sampler:
             # Initialize Walkers
             if rank==0:
                 print('Initializing walker positions...', end='\r', flush=True)
-            ensemble = initialize_walkers(self.params, distribution)
-            x0, f0, h0 = find_MAP(self.params, distribution, ensemble.bounds)
-            x0s = cm.allgather(x0)
-            f0s = cm.allgather(f0)
-            h0s = cm.allgather(h0)
-            start = ensemble.get_walkers(x0s[np.argmin(f0s)], h0s[np.argmin(f0s)])
+            start, MAP, hessian = get_starting_positions(self.params, distribution, cm)
+
             if rank==0:
                 print('Walkers initialised...', end='\r', flush=True)
-            if rank==0:
-                np.save(self.output+'MAP.npy', x0s[np.argmin(f0s)])
-                np.save(self.output+'hessian.npy', h0s[np.argmin(f0s)])
 
-                with open(self.output + 'GelmanRubin.dat', 'w') as f:
-                    header = 'Iter'
-                    for p in distribution.free_labels:
-                        header += '  R_' + p
-                    f.write(header+'\n')
+                np.save(self.output+'MAP.npy', MAP)
+                np.save(self.output+'hessian.npy', hessian)
+                create_gelmanrubin(self.output, distribution.free_labels)
+                create_varnames(self.output, distribution.free_labels)
 
-                with open(self.output + 'varnames.dat', 'w') as f:
-                    header = ''
-                    for p in distribution.free_labels:
-                        header += p + " "
-                    f.write(header[:-1])
-
-            with open(self.output + 'IAT_'+ str(rank) +'.dat', 'w') as f:
-                header = 'Iter'
-                for p in distribution.free_labels:
-                    header += '  tau_' + p
-                f.write(header+'\n')
+            create_IAT(self.output, distribution.free_labels, rank)
             
             # Start Sampling Loop
             if rank==0:
@@ -148,8 +110,7 @@ class sampler:
                 diag.add_samples(samples)
                 act_converged, tau, delta = diag.test_act()
                 act = diag.acts[-1]
-                with open(self.output + 'IAT_' + str(rank) + '.dat', 'a') as f:
-                    f.write(str(cnt)  + " " + " ".join(str(round(t,4)) for t in act)+"\n")
+                append_IAT(self.output, cnt, act, rank)
                 mean, var, N = diag.get_gr_details()
                 cm.chains_comm.barrier()
 
@@ -169,14 +130,9 @@ class sampler:
                         ncall += self.nsteps * self.nwalkers
 
                     rhat = test_gelmanrubin(means, vars, Ns[0])
-                    with open(self.output + 'GelmanRubin.dat', 'a') as f:
-                        f.write(str(cnt) + " " + " ".join(str(round(r,4)) for r in rhat)+"\n")
+                    append_GR(self.output, cnt, rhat)
 
-
-                    clock = time.strftime("%H:%M:%S", time.gmtime(time.time() - t0))
-                    print(clock, '| Iter:', cnt, '| ncall:', ncall, '| R-hat:', round(np.max(rhat),4),
-                          '| act:', np.max(taus), '| nact:', int(cnt/np.max(taus)), '<', self.nact,
-                          '| dact:', np.max(deltas), '<', self.dact, end='\r', flush=True)
+                    print_status(t0, cnt, ncall, rhat, taus, self.nact, deltas, self.dact)
 
                     
                     if cnt > self.miniter:
@@ -214,8 +170,7 @@ class sampler:
             if rank == 0:
                 results = read_chains(self.output)
                 print(results.Summary, flush=True)
-                with open(self.output+"results.dat", mode="w") as f:
-                    f.writelines(results.Summary)
+                save_results(self.output, results)
 
         
     def run_nested(self, loglike_fn):

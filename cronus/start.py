@@ -1,7 +1,5 @@
 import numpy as np
 
-from .optimize import find_MAP
-
 
 class initialize_walkers:
 
@@ -62,7 +60,10 @@ class initialize_walkers:
 
         for w in range(self.nwalkers):
             while True:
-                pos = np.random.multivariate_normal(x0, hess_inv, check_valid='ignore')
+                try:
+                    pos = np.random.multivariate_normal(x0, hess_inv, check_valid='ignore')
+                except:
+                    pos = np.random.multivariate_normal(x0, hess_inv)
                 if np.isfinite(self.get_logprior(pos)):
                     start[w] = pos
                     break
