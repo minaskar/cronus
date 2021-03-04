@@ -17,7 +17,7 @@ def get_default(params):
         params['Diagnostics'] = {}
 
     if 'Output' not in params:
-        params['Output'] = './chains'
+        params['Output'] = {}
 
     # Likelihood
 
@@ -45,8 +45,8 @@ def get_default(params):
     if 'name' not in params['Sampler']:
         params['Sampler']['name'] = 'zeus'
     else:
-        if params['Sampler']['name'] not in ['zeus', 'emcee', 'dynesty']:
-            raise KeyError('Please use a valid sampler (i.e. zeus, emcee).')
+        if params['Sampler']['name'] not in ['zeus', 'emcee', 'light', 'demc', 'dynesty']:
+            raise KeyError('Please use a valid sampler (i.e. zeus, light, emcee, demc).')
 
     if 'ndim' not in params['Sampler']:
         
@@ -86,31 +86,40 @@ def get_default(params):
             raise KeyError('Please use a valid initialization strategy for the walkers (i.e. ellipse, laplace, prior).')
 
     # Diagnostics
+    epsilon = 0.03
+    nact = 20
+    dact = 0.01
 
     if 'Gelman-Rubin' not in params['Diagnostics']:
-        params['Diagnostics']['Gelman-Rubin'] = {'use' : True, 'epsilon' : 0.05}
+        params['Diagnostics']['Gelman-Rubin'] = {'use' : True, 'epsilon' : epsilon}
 
     if 'Autocorrelation' not in params['Diagnostics']:
-        params['Diagnostics']['Autocorrelation'] = {'use': True, 'nact' : 25, 'dact' : 0.01}
+        params['Diagnostics']['Autocorrelation'] = {'use': True, 'nact' : nact, 'dact' : dact}
 
     if 'use' not in params['Diagnostics']['Gelman-Rubin']:
         params['Diagnostics']['Gelman-Rubin']['use'] = True
 
     if 'epsilon' not in params['Diagnostics']['Gelman-Rubin']:
-        params['Diagnostics']['Gelman-Rubin']['epsilon'] = 0.05
+        params['Diagnostics']['Gelman-Rubin']['epsilon'] = epsilon
 
     if 'use' not in params['Diagnostics']['Autocorrelation']:
         params['Diagnostics']['Autocorrelation']['use'] = True
 
     if 'nact' not in params['Diagnostics']['Autocorrelation']:
-        params['Diagnostics']['Autocorrelation']['nact'] = 25
+        params['Diagnostics']['Autocorrelation']['nact'] = nact
 
     if 'dact' not in params['Diagnostics']['Autocorrelation']:
-        params['Diagnostics']['Autocorrelation']['dact'] = 0.01
+        params['Diagnostics']['Autocorrelation']['dact'] = dact
 
     # Output
 
-    if params['Output'][-1] != '/':
-        params['Output'] += '/'
+    if 'directory' not in params['Output']:
+        params['Output']['directory'] = './chains/'
+
+    if params['Output']['directory'][-1] != '/':
+        params['Output']['directory'] += '/'
+
+    if 'tag' not in params['Output']:
+        params['Output']['tag'] = 'run'
     
     return params

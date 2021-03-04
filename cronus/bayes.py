@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import norm
+from scipy.stats import norm, lognorm
 import importlib.util
 import sys
 import inspect
@@ -45,14 +45,27 @@ class Distribution:
 
 
     def _get_logprior(self, x):
+
         logp = 0.0
+
         for p in x:
             if self.parameters[p]['prior']['type'] == 'uniform':
                 if x[p] < self.parameters[p]['prior']['min'] or x[p] > self.parameters[p]['prior']['max']:
                     return -np.inf
+
             elif self.parameters[p]['prior']['type'] == 'normal':
                 diff = x[p]-self.parameters[p]['prior']['loc']
                 logp += -0.5*(diff/self.parameters[p]['prior']['scale'])**2.0 
+
+            elif self.parameters[p]['prior']['type'] == 'loguniform':
+                if x[p] < self.parameters[p]['prior']['min'] or x[p] > self.parameters[p]['prior']['max']:
+                    return -np.inf
+                else:
+                    logp += - np.log(x[p]) - np.log(np.log(self.parameters[p]['prior']['max'])-np.log(self.parameters[p]['prior']['min']))
+
+            elif self.parameters[p]['prior']['type'] == 'lognormal':
+                diff = np.log(x[p])-self.parameters[p]['prior']['loc']
+                logp += -0.5*(diff/self.parameters[p]['prior']['scale'])**2.0 - np.log(x[p]*self.parameters[p]['prior']['scale']) - 0.5*np.log(2.0*np.pi)
 
         return logp
 

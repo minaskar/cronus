@@ -15,6 +15,8 @@ def find_MAP(params, distribution, bounds, ntemp=20):
     
 
     for beta in betas:
+        #if cm.get_rank==0:
+        #    print('beta = ', beta, flush=True)
 
         distribution.set_beta(beta)
         func = distribution.get_neglogposterior

@@ -1,7 +1,6 @@
 import numpy as np
 import scipy
 import h5py
-import glob
 from tabulate import tabulate
 
 
@@ -17,13 +16,13 @@ class read_chains:
     def __init__(self, folder):
         if folder[-1] !=  "/":
             folder += "/"
-        self.filenames = glob.glob(folder+"*.h5")
 
         data = []
-        for filename in self.filenames:
-            with h5py.File(filename, "r") as hf:
-                samples = np.copy(hf['samples'])
-                data.append(samples[samples.shape[0]//2:])
+        with h5py.File(folder+'data.h5', "r") as hf:
+            for key in hf.keys():
+                if key[:7] == 'samples':
+                    samples = np.copy(hf[key])
+                    data.append(samples[samples.shape[0]//2:])
 
         self.nsamples, self.nwalkers, self.ndim = np.shape(data[0])
         self.nchains = len(data)
@@ -33,23 +32,21 @@ class read_chains:
         for i in range(self.nchains):
             self.samples[:,i*self.nwalkers:(i+1)*self.nwalkers, :] = data[i]
 
-        self._map = np.load(folder+'MAP.npy')
-        self._hessian = np.load(folder+'hessian.npy')
+        config = np.load(folder+'config.npy', allow_pickle=True).item()
+        self._map = config['map']
+        self._hessian = config['hessian']
+        self.varnames = config['labels']
 
-        self._gelmanrubin = np.loadtxt(folder+'GelmanRubin.dat', skiprows=1)[:,1:]
+        #self._gelmanrubin = np.loadtxt(folder+'GelmanRubin.dat', skiprows=1)[:,1:]
 
-        taus = 0
-        self.iter = None
-        for i in range(self.nchains):
-            tau = np.loadtxt(folder + "IAT_"+str(i)+".dat", skiprows=1)
-            taus += tau.T[1:]
-            self.iter = tau.T[0]
-        taus /= 2
-        self._autocorr = taus.T
-
-        with open(folder + "varnames.dat", mode="r") as f:
-            varnames = f.read()
-        self.varnames  = varnames.split()
+        #taus = 0
+        #self.iter = None
+        #for i in range(self.nchains):
+        #    tau = np.loadtxt(folder + "IAT_"+str(i)+".dat", skiprows=1)
+        #    taus += tau.T[1:]
+        #    self.iter = tau.T[0]
+        #taus /= 2
+        #self._autocorr = taus.T
 
 
     @property

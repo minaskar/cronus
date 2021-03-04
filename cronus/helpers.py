@@ -8,60 +8,36 @@ from .optimize import find_MAP
 
 import time
 
-def damp_paramfile(output, params):
-    
-    nrun = 1
-    while True:
-        path = output + "run" + str(nrun) + "/"
-        if os.path.isdir(path):
-            nrun += 1
-        else:
+from tqdm import tqdm
+
+def damp_paramfile(output, params, rank=0):
+
+    if rank==0:
+
+        tag = params['Output']['tag']
+
+        path = output + tag + "/"
+        print('Output path : ', path, end='\r', flush=True)
+        if not os.path.isdir(path):
             output = path
-            break
+        else:
+            nrun = 1
+            while True:
+                path = output + "run" + str(nrun) + "/"
+                if os.path.isdir(path):
+                    nrun += 1
+                else:
+                    output = path
+                    break
+
+        os.makedirs(path)
+        # Dump full parameter file
     
-    os.makedirs(path)
-    # Dump full parameter file
-    yaml = YAML()
-    with open(output + "para.yaml", mode='w') as f:
-        yaml.dump(params, f)
+        yaml = YAML()
+        with open(output + "para.yaml", mode='w') as f:
+            yaml.dump(params, f)
 
     return output
-
-
-def initialise_sampler(name, nwalkers, ndim, logprob, pool):
-
-    if name == 'zeus':
-        import zeus
-        sampler = zeus.EnsembleSampler(nwalkers, ndim, logprob, pool=pool, verbose=False)
-    elif name == 'emcee':
-        import emcee
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, logprob, pool=pool)
-
-    return sampler
-
-
-def create_gelmanrubin(output, free_labels):
-    with open(output + 'GelmanRubin.dat', 'w') as f:
-        header = 'Iter'
-        for p in free_labels:
-            header += '  R_' + p
-        f.write(header+'\n')
-
-
-def create_varnames(output, free_labels):
-    with open(output + 'varnames.dat', 'w') as f:
-        header = ''
-        for p in free_labels:
-            header += p + " "
-        f.write(header[:-1])
-
-
-def create_IAT(output, free_labels, rank):
-    with open(output + 'IAT_'+ str(rank) +'.dat', 'w') as f:
-        header = 'Iter'
-        for p in free_labels:
-            header += '  tau_' + p
-        f.write(header+'\n')
 
 
 def get_starting_positions(params, distribution, cm):
@@ -82,27 +58,48 @@ def get_starting_positions(params, distribution, cm):
     return start, x0_best, h0_best
 
 
-def append_IAT(output, cnt, act, rank):
-
-    with open(output + 'IAT_' + str(rank) + '.dat', 'a') as f:
-        f.write(str(cnt)  + " " + " ".join(str(round(t,4)) for t in act)+"\n")
-
-
-def append_GR(output, cnt, rhat):
-
-    with open(output + 'GelmanRubin.dat', 'a') as f:
-        f.write(str(cnt) + " " + " ".join(str(round(r,4)) for r in rhat)+"\n")
-
-
-def print_status(t0, cnt, ncall, rhat, taus, nact, deltas, dact):
-
-    clock = time.strftime("%H:%M:%S", time.gmtime(time.time() - t0))
-    print(clock, '| Iter:', cnt, '| ncall:', ncall, '| R-hat:', round(np.max(rhat),4),
-        '| act:', np.max(taus), '| nact:', int(cnt/np.max(taus)), '<', nact,
-        '| dact:', np.max(deltas), '<', dact, end='\r', flush=True)
-
-
 def save_results(output,results):
 
     with open(output+"results.dat", mode="w") as f:
         f.writelines(results.Summary)
+
+
+def save_config(output, start, MAP, hessian, labels, cm, rank=0):
+    start_all = cm.gather(start, root=0)
+
+    if rank==0:
+        conf = {'start':start_all, 'map' : MAP, 'hessian':hessian, 'labels':labels}
+        np.save(output+'config.npy', conf)
+
+
+
+
+class progress_bar:
+
+    def __init__(self, rank=0, show=True):
+        self.t0 = time.time()
+        self.show = show
+        if self.show and rank==0:
+            self.progress_bar = tqdm(desc='Iter')
+
+    def update(self, cnt, ncall, rhat, tau, dact, nact, rank=0):
+        
+        if self.show and rank==0:
+            dt = time.time() - self.t0
+            clock = time.strftime("%H:%M:%S", time.gmtime(dt))
+    
+            _eta = dt / (cnt/tau) * (nact - cnt/tau)
+            eta = time.strftime("%H:%M:%S", time.gmtime(_eta))
+
+            self.progress_bar.update(1)
+            self.progress_bar.set_postfix(ordered_dict={'ncall':ncall,
+                                                        'R-hat':round(rhat,4),
+                                                        'act':tau,
+                                                        'nact':int(cnt/tau),
+                                                        'dact':dact,
+                                                        'ETA':eta
+                                                        })
+
+    def close(self, rank=0):
+        if self.show and rank==0:
+            self.progress_bar.close()

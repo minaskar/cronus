@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: cronus-mcmc
-Version: 1.0.1
+Version: 0.9.0
 Summary: cronus: MCMC + MPI MADE EASY
 Home-page: https://github.com/minaskar/cronus
 Author: Minas Karamanis

@@ -6,12 +6,13 @@ import sys
 import time
 from ruamel.yaml import YAML
 
-from .save import datasaver
-from .diagnostics import diagnose, test_gelmanrubin
 from .bayes import Distribution
+from .dataload import DataLoader 
+from .diagnose import Diagnostics
+from .ensemble import Ensemble
 from .results import read_chains
-from .helpers import damp_paramfile, initialise_sampler, create_gelmanrubin, create_varnames, create_IAT, get_starting_positions
-from .helpers import append_IAT, append_GR, print_status, save_results
+from .helpers import damp_paramfile, get_starting_positions
+from .helpers import save_results, progress_bar, save_config
 
 
 class sampler:
@@ -39,138 +40,96 @@ class sampler:
         self.epsilon = params['Diagnostics']['Gelman-Rubin']['epsilon']
 
         # Output
-        self.output = params['Output'] + "/"
-
+        self.output = params['Output']['directory'] #+ "/"
+        
         #self.comm = comm
 
     
-    def run(self, loglike_fn):
-        if self.name in ['zeus', 'emcee']:
-            self.run_mcmc(loglike_fn)
+    def run(self, loglike_fn, continue_mcmc=False):
+        if self.name in ['zeus', 'emcee', 'light', 'demc']:
+            self.run_mcmc(loglike_fn, continue_mcmc)
         elif self.name in ['dynesty']:
             self.run_nested(loglike_fn)
 
 
-    def run_mcmc(self, loglike_fn):
+    def run_mcmc(self, loglike_fn, continue_mcmc):
 
         with ChainManager(self.nchains) as cm:
 
             rank = cm.get_rank
 
-            # Create run folder
-            if rank == 0:
-                self.output = damp_paramfile(self.output, self.params)
-            self.output = cm.bcast(self.output, root=0)
-
             # Define Log Posterior
             distribution = Distribution(self.params, loglike_fn)
-            logpost_fn = distribution.get_logposterior
-            
-            # Initialize Sampler
-            sampler = initialise_sampler(self.name, self.nwalkers, distribution.nfree, logpost_fn, pool=cm.get_pool)
-            
-            # Initialize Datasaver
-            d = datasaver(self.output+'chain_'+str(cm.get_rank)+'.h5')
 
-            # Initialize Diagnostics
-            diag = diagnose(tau_epsilon=self.dact, tau_multiple=self.nact, thin=self.thin)
+            # Initialise Dataloader and Diagnostics
+            if not continue_mcmc:
+                self.output = damp_paramfile(self.output, self.params, rank)
+
+            dataloader = DataLoader(output=self.output,
+                                    ndim=distribution.nfree,
+                                    size=self.nchains,
+                                    continue_mcmc=continue_mcmc)
+
+            diagnostics = Diagnostics(dataloader=dataloader,
+                                          tau_epsilon=self.dact,
+                                          tau_multiple=self.nact,
+                                          epsilon=self.epsilon,
+                                          use_act=self.use_act,
+                                          use_gr=self.use_gr,
+                                          miniter=self.miniter,
+                                          maxiter=self.maxiter,
+                                          maxcall=self.maxcall,
+                                          thin=self.thin,
+                                          size=self.nchains,
+                                          continue_mcmc=continue_mcmc)
+
+            # Initialize Sampler
+            sampler = Ensemble(name=self.name,
+                               nwalkers=self.nwalkers, 
+                               ndim=distribution.nfree,
+                               logprob=distribution.get_logposterior,
+                               pool=cm.get_pool)
 
             # Initialize Walkers
             if rank==0:
                 print('Initializing walker positions...', end='\r', flush=True)
-            start, MAP, hessian = get_starting_positions(self.params, distribution, cm)
-
-            if rank==0:
-                print('Walkers initialised...', end='\r', flush=True)
-
-                np.save(self.output+'MAP.npy', MAP)
-                np.save(self.output+'hessian.npy', hessian)
-                create_gelmanrubin(self.output, distribution.free_labels)
-                create_varnames(self.output, distribution.free_labels)
-
-            create_IAT(self.output, distribution.free_labels, rank)
-            
+            if continue_mcmc:
+                start = dataloader.get_last_sample(rank=rank)
+                log_prob0 = dataloader.get_last_logps(rank=rank)
+            else:
+                start, MAP, hessian = get_starting_positions(self.params, distribution, cm)
+                log_prob0 = None
+                save_config(self.output, start, MAP, hessian, distribution.free_labels, cm, rank)
+ 
             # Start Sampling Loop
-            if rank==0:
-                t0 = time.time()
-            
             ncall = 0
             cnt = 0
+            pbar = progress_bar(rank=rank)
+            terminate = False
             while True:
-                sampler.run_mcmc(start, self.nsteps, progress=False, thin=self.thin);
-                chain = sampler.get_chain()
-                logps = sampler.get_log_prob()
-                start = chain[-1]
-                d.save(chain, logps)
-                sampler.reset()
-
-                cnt += self.nsteps
-
-                samples = d.load('samples')
-                diag.add_samples(samples)
-                act_converged, tau, delta = diag.test_act()
-                act = diag.acts[-1]
-                append_IAT(self.output, cnt, act, rank)
-                mean, var, N = diag.get_gr_details()
-                cm.chains_comm.barrier()
-
-                act_converged = cm.gather(act_converged, root=0)
-                taus = cm.gather(tau, root=0)
-                deltas = cm.gather(delta, root=0)
-                means = cm.gather(mean, root=0)
-                vars = cm.gather(var, root=0)
-                Ns = cm.gather(N, root=0)
-                
-                if rank == 0:
-                    terminate = False
-
-                    if self.name == 'zeus':
-                        ncall += sampler.ncall
-                    elif self.name == 'emcee':
-                        ncall += self.nsteps * self.nwalkers
-
-                    rhat = test_gelmanrubin(means, vars, Ns[0])
-                    append_GR(self.output, cnt, rhat)
-
-                    print_status(t0, cnt, ncall, rhat, taus, self.nact, deltas, self.dact)
-
+                for _ in sampler.sample(start, log_prob0=log_prob0, iterations=self.nsteps, progress=False, thin=self.thin):
+                    pbar.update(cnt+sampler.iteration, ncall+sampler.ncall, rhat=diagnostics.Rhat, tau=diagnostics.tau, dact=diagnostics.delta, nact=self.nact, rank=rank)
                     
-                    if cnt > self.miniter:
-                        if self.use_gr and self.use_act:
-                            if np.all(np.abs(rhat-1.0)<self.epsilon) and np.all(act_converged):
-                                print('', flush=True)
-                                terminate = True
-                        elif self.use_gr and not self.use_act:
-                            if np.all(np.abs(rhat-1.0)<self.epsilon):
-                                print('', flush=True)
-                                terminate = True
-                        elif not self.use_gr and self.use_act:
-                            if np.all(act_converged):
-                                print('', flush=True)
-                                terminate = True
-                    
+                start, log_prob0 = sampler.get_last()
 
-                    if cnt>self.maxiter:
-                        print('', flush=True)
+                chains_all = cm.gather(sampler.get_chain(), root=0)
+                logps_all = cm.gather(sampler.get_log_prob(), root=0)
+
+                ncall += sampler.ncall
+                cnt += sampler.iteration
+
+                if rank==0:
+                    dataloader.save(chains_all, logps_all)
+                    if diagnostics.diagnose(cnt, ncall):
                         terminate = True
-
-                    if ncall>self.maxcall:
-                        print('', flush=True)
-                        terminate = True
-
-                else:
-                    terminate = False
-                    
-                cm.chains_comm.barrier()
                 terminate = cm.bcast(terminate, root=0)
-                cm.chains_comm.barrier()
+                
+                sampler.reset()
+                
                 if terminate:
                     break
-            
-            if rank == 0:
-                results = read_chains(self.output)
-                print(results.Summary, flush=True)
-                save_results(self.output, results)
+
+            pbar.close(rank=rank)
 
         
     def run_nested(self, loglike_fn):

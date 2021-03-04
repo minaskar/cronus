@@ -1,3 +1,4 @@
 [console_scripts]
+cronus-continue = cronus.run:continue_script
 cronus-run = cronus.run:run_script
 

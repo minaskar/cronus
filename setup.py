@@ -8,7 +8,7 @@ with open("requirements.txt", 'r') as dependencies:
 
 setuptools.setup(
     name="cronus-mcmc",
-    version="1.0.1",
+    version="0.9.0",
     author="Minas Karamanis",
     author_email="minaskar@gmail.com",
     description="cronus: MCMC + MPI MADE EASY",
@@ -27,6 +27,6 @@ setuptools.setup(
     install_requires=requirements,
     python_requires='>=3.6',
     entry_points={
-        'console_scripts': ['cronus-run=cronus.run:run_script'],
+        'console_scripts': ['cronus-run=cronus.run:run_script', 'cronus-continue=cronus.run:continue_script'],
     }
 )

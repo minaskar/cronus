@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.stats import lognorm
 
 class initialize_walkers:
 
@@ -35,6 +35,21 @@ class initialize_walkers:
                 bounds.append([loc-5.0*scale, loc+5.0*scale])
                 self.low[i] = loc-5.0*scale
                 self.high[i] = loc+5.0*scale
+
+            elif self.parameters[p]['prior']['type'] == 'loguniform':
+                bounds.append([self.parameters[p]['prior']['min'], self.parameters[p]['prior']['max']])
+                self.low[i] = self.parameters[p]['prior']['min']
+                self.high[i] = self.parameters[p]['prior']['max']
+
+            elif self.parameters[p]['prior']['type'] == 'lognormal':
+                loc = self.parameters[p]['prior']['loc']
+                scale = self.parameters[p]['prior']['scale']
+                min_val = np.exp(loc-5.0*scale)
+                max_val = np.exp(loc+5.0*scale)
+                bounds.append([min_val, max_val])
+                self.low[i] = min_val
+                self.high[i] = max_val
+
         return bounds
 
 
@@ -46,7 +61,7 @@ class initialize_walkers:
         
         for w in range(self.nwalkers):
             while True:
-                pos = np.random.randn(self.distribution.nfree)*sigma*0.01 + x0
+                pos = np.random.randn(self.distribution.nfree)*sigma*1e-4 + x0
                 if np.isfinite(self.get_logprior(pos)):
                     start[w] = pos
                     break
@@ -85,6 +100,17 @@ class initialize_walkers:
                     start[walker, i] = np.random.normal(self.parameters[p]['prior']['loc'],
                                                                     self.parameters[p]['prior']['scale'])
 
+                elif self.parameters[p]['prior']['type'] == 'loguniform':
+                    start[walker, i] = np.exp(np.random.uniform(np.log(self.parameters[p]['prior']['min']),
+                                                                     np.log(self.parameters[p]['prior']['max'])))
+
+                elif self.parameters[p]['prior']['type'] == 'lognormal':
+                    start[walker, i] = np.exp(np.random.normal(self.parameters[p]['prior']['loc'],
+                                                                    self.parameters[p]['prior']['scale']))
+                    #start[walker, i] = lognorm.rvs(s=self.parameters[p]['prior']['scale'],
+                    #                               loc=self.parameters[p]['prior']['loc'],
+                    #                               scale=np.exp(self.parameters[p]['prior']['loc']))
+
         return start
 
 
@@ -97,5 +123,5 @@ class initialize_walkers:
         elif self.sampler_info['initial'] == 'prior':
             p0 = self.get_prior()
         else:
-            print('Use valid initialization...')
+            print('Use valid initialization...', flush=True)
         return p0

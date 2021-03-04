@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt 
-import seaborn as sns
 
 
 def traceplot(results, varnames=None, width=12, height=1.75, fontsize=14, show_mean=True, savefig=False, filename="traceplot.png", dpi=200):
@@ -28,6 +26,10 @@ def traceplot(results, varnames=None, width=12, height=1.75, fontsize=14, show_m
     dpi : int
         Image DPI for figure if filename format is png. Not required for PDF.
     """
+
+    import matplotlib.pyplot as plt 
+    import seaborn as sns
+
     if varnames is not None:
         npar = len(varnames)
     else:
@@ -125,6 +127,9 @@ def cornerplot(samples,
     Figure, Axes
         The matplotlib figure and axes.
     """
+
+    import matplotlib.pyplot as plt 
+    import seaborn as sns
 
     ndim = samples.shape[1]
 
